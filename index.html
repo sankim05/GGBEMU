@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>GGBEMU</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="" href="style.css">
+    <link rel="icon" href="./image.jpg">
+    <script src="main.js" type="module" defer></script>
+
+    
+</head>
+
+<body>
+
+<h1>가베(GABE) Game Boy 에뮬레이터</h1>
+<hr>
+
+<canvas id="Display" width="480" height="432"></canvas>
+<div id = "SPEEDSTER">
+<button type="button" class = "inliner bottonsxd" id = "Speeddown"> &lt; </button>
+<div class = "inliner" id = "Speedshow" >4.19Mhz</div>
+<button type="button" class = "inliner bottonsxd" id = "Speedup"> &gt; </button>
+(1hz ~ 32Mhz)
+<button type="button" class = "inliner bottonsxd" id = "EmuRun"> 시작 </button>
+<button type="button" class = "inliner bottonsxd" id = "EmuPause"> 정지 </button>
+<button type="button" class = "inliner bottonsxd" id = "EmuStep"> 스텝 </button>
+<button type="button" class = "inliner bottonsxd" id = "EmuReset"> 리셋 </button>
+<span id = "pausedtxt">현재 정지 중</span>
+
+</div>
+
+
+
+
+롬 업로드하기
+<input type="file" id="userUpload">
+
+<br>
+
+<div id = "bigButtons">
+
+   <div id="dpadContainer">
+<button type="button" class = "dpad" id = "DpadUp"> ^ </button>
+<button type="button" class = "dpad" id = "DpadLeft"> < </button>
+<button type="button" class = "dpad" id = "DpadRight"> > </button>
+<button type="button" class = "dpad" id = "DpadDown"> v </button>
+</div>
+    Dpad: WASD
+    <br>
+    A:K B:J
+    <br> start: V select: B
+    
+<div id="actionButtons">
+<button type="button" class = "actionbtn" id = "BtnA"> A </button>
+<button type="button" class = "actionbtn" id = "BtnB"> B </button>
+</div>
+<div id="startSelectButtons">
+<button type="button" class = "longbtn" id = "BtnStart"> start </button>
+<button type="button" class = "longbtn" id = "BtnSelect"> select </button>
+</div>
+</div>
+
+
+
+
+
+
+
+
+</body>
+
+
+</html>

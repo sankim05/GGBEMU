@@ -1,0 +1,109 @@
+
+   .inliner {
+  
+    display: inline;
+   
+  }
+
+  body{
+    background-color: rgba(70, 70, 70);
+  }
+  *{color: white;}
+
+  .bottonsxd{
+    background-color: gray;
+
+
+  }
+  #Display{
+    border-radius: 10px;
+  
+    border-color: white;
+    border-style:solid;
+  }
+
+  .dpad{
+    color : black;
+    font-size: large;
+    width: 30px;
+    height: 30px;
+  }
+
+  .actionbtn{
+        width: 40px;
+    height: 40px;
+        border-radius: 50%;
+  font-size: large;
+    border-color: rgb(171, 0, 0);
+    border-style:solid;
+    background-color: crimson;
+    
+  }
+
+  .actionbtn:hover {
+      background-color:#a60000;
+      transition: 0.1s;
+  }
+
+  .longbtn{
+    color : black;
+  }
+
+  #bigButtons {
+    display: grid;
+    float: left;
+    grid-template-columns: 1fr 1fr 1fr; 
+    grid-template-rows: auto auto;
+    gap: 20px;
+    width: 480px;
+    margin: 20px auto;
+}
+
+
+
+#dpadContainer {
+    display: grid;
+    grid-template-columns: repeat(3, 30px);
+    grid-template-rows: repeat(3, 30px);
+}
+    #DpadUp {
+        grid-row: 1 / 2;
+        grid-column: 2 / 3;
+    }
+    #DpadLeft {
+        grid-row: 2 / 3;
+        grid-column: 1 / 2;
+    }
+    #DpadRight {
+        grid-row: 2 / 3;
+        grid-column: 3 / 4;
+    }
+    #DpadDown {
+        grid-row: 3 / 4;
+        grid-column: 2 / 3;
+    }
+
+#actionButtons {
+    display: flex;
+    align-items: flex-end;
+}
+
+#BtnB {
+    order: 1;
+
+    transform: translate(0px, -20px);
+}
+
+#BtnA {
+    order: 2;
+    transform: translate(15px, -40px);
+}
+
+#startSelectButtons {
+    grid-column: 1 / 4;
+    grid-row: 2 / 3;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+}
