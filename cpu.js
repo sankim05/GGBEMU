@@ -223,9 +223,12 @@ export class GABECPU{
                         if(this.extracycle==5){
 
                             this.memory.writeByte(byte2,this.SP&0xFF);
-                        this.memory.writeByte(byte3,this.SP>>8);
+                        
                             this.extracycle = 0;
                             this.PC+=3;
+                        }else if(this.extracycle==4){
+                            this.memory.writeByte(byte3,this.SP>>8);
+
                         }
                     break;   
                     case 0x09: // ADD HL,BC
@@ -238,7 +241,7 @@ export class GABECPU{
                     break;
                     case 0x0A: // LD A, [BC]
                         if(this.extracycle==2){
-                            this.registers.A = this.memory.readByte(this.BC)
+                            this.registers.A = this.memory.readByte(this.BC);
                             this.extracycle = 0;
                             this.PC++;
                         }
@@ -380,7 +383,7 @@ export class GABECPU{
                     break;
                     case 0x0A: // LD A, [DE]
                         if(this.extracycle==2){
-                            this.registers.A = this.memory.readByte(this.DE)
+                            this.registers.A = this.memory.readByte(this.DE);
                             this.extracycle = 0;
                             this.PC++;
                         }
@@ -464,133 +467,320 @@ export class GABECPU{
                     break;
                     case 0x02: // LD [HL+], A
                         if(this.extracycle==2){
-                            this.memory.writeByte(this.DE, this.registers.A);
+                            this.memory.writeByte(this.HL, this.registers.A);
+                            this.HL = (this.HL+1)&0xFFFF;
                             this.extracycle = 0;
                             this.PC++;
                         }
                     break;
-                    //construction line @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2
-                    case 0x03: // INC DE
+                    
+                    case 0x03: // INC HL
                         if(this.extracycle==2){
-                            this.DE = (this.DE+1)&0xFFFF;
+                            this.HL = (this.HL+1)&0xFFFF;
                             this.extracycle = 0;
                             this.PC++;
                         }
                     break;
-                     case 0x04: // INC D
+                     case 0x04: // INC H
                         if(this.extracycle==1){
                             let cs = this.CFLAG;
-                            this.registers.D = this._8bitadd(this.registers.D,1);
+                            this.registers.H = this._8bitadd(this.registers.H,1);
                             this.CFLAG = cs;
                             this.extracycle = 0;
                             this.PC++;
                         }
                     break;
-                    case 0x05: // DEC D
+                    case 0x05: // DEC H
                         if(this.extracycle==1){
                             let cs = this.CFLAG;
-                            this.registers.D = this._8bitadd(this.registers.D,-1);
+                            this.registers.H = this._8bitadd(this.registers.H,-1);
                             this.CFLAG = cs;
                             this.extracycle = 0;
                             this.PC++;
                         }
                     break; 
-                    case 0x06: // LD D, n8
+                    case 0x06: // LD H, n8
                         if(this.extracycle==2){
                         
-                            this.registers.D = byte2;
+                            this.registers.H = byte2;
                         
                             this.extracycle = 0;
                             this.PC+=2;
                         }
                     break;
-                    case 0x07: // RLA
+                    case 0x07: // DAA
                         if(this.extracycle==1){
-                            this.ZFLAG = 0;
-                            this.NFLAG = 0;
+                            let adj = 0;
+                            if(this.NFLAG){
+                                if(this.HFLAG) adj+= 0x6;
+                                if(this.CFLAG) adj+= 0x60;
+                                
+                                //if(this.registers.A<adj) this.CFLAG = 1;
+                                this.registers.A = (this.registers.A-adj)&0xFFFF;
+                            }else{
+                                if(this.HFLAG||this.registers.A&0xF>0x9) adj+= 0x6;
+                                if(this.CFLAG||this.registers.A>0x99){
+                                    this.CFLAG = 1;
+                                    adj+= 0x60;
+                                }
+                                this.registers.A+=adj;
+                                if(this.registers.A>0xFF){
+                                    this.registers.A = this.registers.A&0xFFFF;
+                                    //this.CFLAG = 1;
+                                }
+                            }
+                            if(this.registers.A==0) this.ZFLAG = 0;
+                            
                             this.HFLAG = 0;
-                            let cs = this.CFLAG;
-                            this.CFLAG = this.registers.A>>7;
-                            this.registers.A = ((this.registers.A << 1) | cs)&0xFF;
-                        
+
                             this.extracycle = 0;
                             this.PC++;
                         }
                     break;
-                    case 0x08: // JR e8
+                    case 0x08: // JR Z, e8
+                        if(!this.ZFLAG){
+                        if(this.extracycle==2){
+                            this.extracycle = 0;
+                            this.PC+=2;
+                        }   
+
+                        }else{
                         if(this.extracycle==3){
-                            
-                            
                             pos = (128 + byte2)&255-128;
                             this.extracycle = 0;
-                            this.PC+=pos;
+                            this.PC= this.PC + 2 + pos;
+                        }   
+
+
                         }
                     break;   
-                    case 0x09: // ADD HL,DE
+                    case 0x09: // ADD HL,HL
                         if(this.extracycle==2){
 
-                            this.HL = this._16bitadd(this.HL,this.DE);
+                            this.HL = this._16bitadd(this.HL,this.HL);
                             this.extracycle = 0;
                             this.PC++;
                         }
                     break;
-                    case 0x0A: // LD A, [DE]
+                    case 0x0A: // LD A, [HL+]
                         if(this.extracycle==2){
-                            this.registers.A = this.memory.readByte(this.DE)
+                            this.registers.A = this.memory.readByte(this.HL);
+                            this.HL = (this.HL+1)&0xFFFF;
                             this.extracycle = 0;
                             this.PC++;
                         }
                     break;
-                    case 0x0B: // DEC DE
+                    case 0x0B: // DEC HL
                         if(this.extracycle==2){
-                            this.DE = (this.DE-1)&0xFFFF;
+                            this.HL = (this.HL-1)&0xFFFF;
                             this.extracycle = 0;
                             this.PC++;
                         }
                     break;
-                    case 0x0C: // INC E
+                    case 0x0C: // INC L
                         if(this.extracycle==1){
                             let cs = this.CFLAG;
-                            this.registers.E = this._8bitadd(this.registers.E,1);
+                            this.registers.L = this._8bitadd(this.registers.L,1);
                             this.CFLAG = cs;
                             this.extracycle = 0;
                             this.PC++;
                         }
                     break;
-                    case 0x0D: // DEC E
+                    case 0x0D: // DEC L
                         if(this.extracycle==1){
                             let cs = this.CFLAG;
-                            this.registers.E = this._8bitadd(this.registers.E,-1);
+                            this.registers.L = this._8bitadd(this.registers.L,-1);
                             this.CFLAG = cs;
                             this.extracycle = 0;
                             this.PC++;
                         }
                     break;
-                    case 0x0E: // LD E, n8
+                    case 0x0E: // LD L, n8
                         if(this.extracycle==2){
                         
-                            this.registers.E = byte2;
+                            this.registers.L = byte2;
                         
                             this.extracycle = 0;
                             this.PC+=2;
                         }
                     break;
-                    case 0x0F: // RRA
+                    case 0x0F: // CPL
                         if(this.extracycle==1){
-                            this.ZFLAG = 0;
-                            this.NFLAG = 0;
-                            this.HFLAG = 0;
-                            let cs = this.CFLAG;
-                            this.CFLAG = this.registers.A&1;
-                            this.registers.A = ((this.registers.A >> 1) | (this.cs<<7));
+                          
+                            this.NFLAG = 1;
+                            this.HFLAG = 1;
+  
+                            this.registers.A = ~this.registers.A&0xFF;
                         
-                            this.extracycle = 0;
                             this.PC++;
                         }
                     break;                      
                 }
 
                 break;
+            case 0x03:
+                switch(LN1){
+                    case 0x00: // JR NC, e8
+                        if(this.CFLAG){
+                        if(this.extracycle==2){
+                            this.extracycle = 0;
+                            this.PC+=2;
+                        }   
+
+                        }else{
+                        if(this.extracycle==3){
+                            pos = (128 + byte2)&255-128;
+                            this.extracycle = 0;
+                            this.PC= this.PC + 2 + pos;
+                        }   
+
+
+                        }
+ 
+                    break;
+                    case 0x01: // LD SP, n16
+                        if(this.extracycle==3){
+                            this.SP = byte2 | (byte3 << 8);
+                            this.extracycle = 0;
+                            this.PC+=3;
+                        }
+                    break;
+                    case 0x02: // LD [HL-], A
+                        if(this.extracycle==2){
+                            this.memory.writeByte(this.HL, this.registers.A);
+                            this.HL = (this.HL-1)&0xFFFF;
+                            this.extracycle = 0;
+                            this.PC++;
+                        }
+                    break;
+                    
+                    case 0x03: // INC SP
+                        if(this.extracycle==2){
+                            this.SP = (this.SP+1)&0xFFFF;
+                            this.extracycle = 0;
+                            this.PC++;
+                        }
+                    break;
+                     case 0x04: // INC [HL]
+                        if(this.extracycle==3){
+                            let cs = this.CFLAG;
+                            this.memory.writeByte(this.HL,this._8bitadd(this.memory.readByte(this.HL),1));
+                            
+                            this.CFLAG = cs;
+                            this.extracycle = 0;
+                            this.PC++;
+                        }
+                    break;
+                    case 0x05: // DEC [HL]
+                        if(this.extracycle==3){
+                            let cs = this.CFLAG;
+                            this.memory.writeByte(this.HL,this._8bitadd(this.memory.readByte(this.HL),-1));
+                            
+                            this.CFLAG = cs;
+                            this.extracycle = 0;
+                            this.PC++;
+                        }
+                    break; 
+                    case 0x06: // LD [HL], n8
+                        if(this.extracycle==3){
+                        
+                            this.memory.writeByte(this.HL,byte2);
+                        
+                            this.extracycle = 0;
+                            this.PC+=2;
+                        }
+                    break;
+                    case 0x07: // SCF
+                        if(this.extracycle==1){
+                            this.CFLAG = 1;
+                            this.HFLAG = 0;
+                            this.NFLAG = 0;
+
+                            this.extracycle = 0;
+                            this.PC++;
+                        }
+                    break;
+                    case 0x08: // JR C, e8
+                        if(!this.CFLAG){
+                        if(this.extracycle==2){
+                            this.extracycle = 0;
+                            this.PC+=2;
+                        }   
+
+                        }else{
+                        if(this.extracycle==3){
+                            pos = (128 + byte2)&255-128;
+                            this.extracycle = 0;
+                            this.PC= this.PC + 2 + pos;
+                        }   
+
+
+                        }
+                    break;   
+                    case 0x09: // ADD HL,SP
+                        if(this.extracycle==2){
+
+                            this.HL = this._16bitadd(this.HL,this.SP);
+                            this.extracycle = 0;
+                            this.PC++;
+                        }
+                    break;
+                    case 0x0A: // LD A, [HL-]
+                        if(this.extracycle==2){
+                            this.registers.A = this.memory.readByte(this.HL);
+                            this.HL = (this.HL-1)&0xFFFF;
+                            this.extracycle = 0;
+                            this.PC++;
+                        }
+                    break;
+                    case 0x0B: // DEC SP
+                        if(this.extracycle==2){
+                            this.SP = (this.SP-1)&0xFFFF;
+                            this.extracycle = 0;
+                            this.PC++;
+                        }
+                    break;
+                    case 0x0C: // INC A
+                        if(this.extracycle==1){
+                            let cs = this.CFLAG;
+                            this.registers.A = this._8bitadd(this.registers.A,1);
+                            this.CFLAG = cs;
+                            this.extracycle = 0;
+                            this.PC++;
+                        }
+                    break;
+                    case 0x0D: // DEC A
+                        if(this.extracycle==1){
+                            let cs = this.CFLAG;
+                            this.registers.A = this._8bitadd(this.registers.A,-1);
+                            this.CFLAG = cs;
+                            this.extracycle = 0;
+                            this.PC++;
+                        }
+                    break;
+                    case 0x0E: // LD A, n8
+                        if(this.extracycle==2){
+                        
+                            this.registers.A = byte2;
+                        
+                            this.extracycle = 0;
+                            this.PC+=2;
+                        }
+                    break;
+                    case 0x0F: // CCF
+                        if(this.extracycle==1){
+                          
+                            this.NFLAG = 0;
+                            this.HFLAG = 0;
+  
+                            this.CFLAG = Math.abs(this.CFLAG-1);
+                        
+                            this.PC++;
+                        }
+                    break;                      
+                }
+
+                break;                
         }
     }
 
