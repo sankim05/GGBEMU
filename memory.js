@@ -19,33 +19,58 @@ export class gabememory{
         //0xFFFF Inturrupt Enable Register 1B
         this.rom = null; // big very
         //0x0100-014F cartridge header 80B
+
+
+
+        this.cartridgetype = 0;
+        this.bankingmode = 0;
     }
+
+    bankswitch(){
+
+    }
+
     readByte(address){
         return this.bigmemory[address];
 
     }
     writeByte(address,value){
-        this.bigmemory[address] = value;
+        if(address<0xC000){
+            switch(this.cartridgetype){
+                case 0x00:
+                    // does not write if rom area
+                    if(address>=0x8000){
+                        this.bigmemory[address] = value;
+                    }
+                break;
+
+            }
+
+        }else{
+            this.bigmemory[address] = value;
+            if(address>=0xE000&&address<=0xFDFF){
+                this.bigmemory[address-0x2000] = value;
+            }
+            if(address>=0xC000&&address<=0xDDFF){
+                this.bigmemory[address+0x2000] = value;
+            }
+            
+            
+
+        }
+
+        
 
     }
 
-    reset(){
-        this.bigmemory.fill(0);
-        if(this.rom!=null){
-            this.loadrom()
-        }
-        for (let i=0;i<0x0100;i++) {
-            this.bigmemory[i] = parseInt(this.bootrom.substring(i*2,i*2+2), 16); 
-        }
 
-    }
     loadrom(){
         if(this.rom!=null){
-
-        let cartridgetype = this.rom[0x0147];
-        let romsize = this.rom[0x0148];
-        let ramsize = this.rom[0x0149];
-        switch(cartridgetype){
+        
+        this.cartridgetype = this.rom[0x0147];
+        const romsize = this.rom[0x0148];
+        const ramsize = this.rom[0x0149];
+        switch(this.cartridgetype){
             case 0x00:
                 for(let i=0;i<0x8000;i++){
                     this.bigmemory[i] = this.rom[i];
@@ -61,6 +86,18 @@ export class gabememory{
         
 
     }
+    reset(){
+        this.bigmemory.fill(0);
+        this.bigmemory[0xFF00] = 0xFF;
+        this.cartridgetype = 0;
+        this.bankingmode = 0;
+        if(this.rom!=null){
+            this.loadrom();
+        }
+        for (let i=0;i<0x0100;i++) {
+            this.bigmemory[i] = parseInt(this.bootrom.substring(i*2,i*2+2), 16); 
+        }
 
+    }
     
 }
