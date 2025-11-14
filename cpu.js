@@ -2654,7 +2654,206 @@ export class GABECPU{
                                     break;                                                                                                                                                           
                                 }
                             break;                            
-
+                            case 0x02:
+                                switch(LN2){
+                                    case 0x00://SLA B
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.B>>7;
+                                            this.registers.B = (this.registers.B << 1)&0xFF;
+                                            if(this.registers.B==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://SLA C
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.C>>7;
+                                            this.registers.C = (this.registers.C << 1)&0xFF;
+                                            if(this.registers.C==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }              
+                                    break;
+                                    case 0x02://SLA D
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.D>>7;
+                                            this.registers.D = (this.registers.D << 1)&0xFF;
+                                            if(this.registers.D==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }         
+                                    break;
+                                    case 0x03://SLA E
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.E>>7;
+                                            this.registers.E = (this.registers.E << 1)&0xFF;
+                                            if(this.registers.E==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x04://SLA H
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.H>>7;
+                                            this.registers.H = (this.registers.H << 1)&0xFF;
+                                            if(this.registers.H==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x05://SLA L
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.L>>7;
+                                            this.registers.L = (this.registers.L << 1)&0xFF;
+                                            if(this.registers.L==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x06://SLA [HL]
+                                        if(this.extracycle==4){
+                                            let rawdata = this.memory.readByte(this.HL);
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = rawdata>>7;
+                                            rawdata = (rawdata << 1)&0xFF;
+                                            if(rawdata==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.memory.writeByte(this.HL,rawdata);
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x07://SLA A
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.A>>7;
+                                            this.registers.A = (this.registers.A << 1)&0xFF;
+                                            if(this.registers.A==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }                    
+                                    break;
+                                    case 0x08://SRA B
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.B&1;
+                                            this.registers.B = (this.registers.B&0x80)|(this.registers.B >> 1);
+                                            if(this.registers.B==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://SRA C
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.C&1;
+                                            this.registers.C = (this.registers.C&0x80)|(this.registers.C >> 1);
+                                            if(this.registers.C==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;
+                                    case 0x0A://SRA D
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.D&1;
+                                            this.registers.D = (this.registers.D&0x80)|(this.registers.D >> 1);
+                                            if(this.registers.D==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }             
+                                    break;
+                                    case 0x0B://SRA E
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.E&1;
+                                            this.registers.E = (this.registers.E&0x80)|(this.registers.E >> 1);
+                                            if(this.registers.E==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }    
+                                    break;
+                                    case 0x0C://SRA H
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.H&1;
+                                            this.registers.H = (this.registers.H&0x80)|(this.registers.H >> 1);
+                                            if(this.registers.H==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;
+                                    case 0x0D://SRA L
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.L&1;
+                                            this.registers.L = (this.registers.L&0x80)|(this.registers.L >> 1);
+                                            if(this.registers.L==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0E://SRA [HL]
+                                        if(this.extracycle==4){
+                                            let rawdata = this.memory.readByte(this.HL);
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = rawdata&1;
+                                            rawdata = (rawdata&0x80)|(rawdata >> 1);
+                                            if(rawdata==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.memory.writeByte(this.HL,rawdata);
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0F://SRA A
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.A&1;
+                                            this.registers.A = (this.registers.A&0x80)|(this.registers.A >> 1);
+                                            if(this.registers.A==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }             
+                                    break;                                                                                                                                                           
+                                }
+                            break;
                         }
 
 
