@@ -2854,6 +2854,1790 @@ export class GABECPU{
                                     break;                                                                                                                                                           
                                 }
                             break;
+                            case 0x03:
+                                switch(LN2){
+                                    case 0x00://SWAP B
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = 0;
+                                            this.registers.B = ((this.registers.B <<4)&0xF0)|(this.registers.B >>4);
+                                            if(this.registers.B==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://SWAP C
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = 0;
+                                            this.registers.C = ((this.registers.C <<4)&0xF0)|(this.registers.C >>4);
+                                            if(this.registers.C==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }              
+                                    break;
+                                    case 0x02://SWAP D
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = 0;
+                                            this.registers.D = ((this.registers.D <<4)&0xF0)|(this.registers.D >>4);
+                                            if(this.registers.D==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }
+                                    break;
+                                    case 0x03://SWAP E
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = 0;
+                                            this.registers.E = ((this.registers.E <<4)&0xF0)|(this.registers.E >>4);
+                                            if(this.registers.E==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x04://SWAP H
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = 0;
+                                            this.registers.H = ((this.registers.H <<4)&0xF0)|(this.registers.H >>4);
+                                            if(this.registers.H==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x05://SWAP L
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = 0;
+                                            this.registers.L = ((this.registers.L <<4)&0xF0)|(this.registers.L >>4);
+                                            if(this.registers.L==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x06://SWAP [HL]
+                                        if(this.extracycle==4){
+                                            let rawdata = this.memory.readByte(this.HL);
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = 0;
+                                            rawdata = ((rawdata <<4)&0xF0)|(rawdata >>4);
+                                            if(rawdata==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.memory.writeByte(this.HL,rawdata);
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x07://SWAP A
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = 0;
+                                            this.registers.L = ((this.registers.L <<4)&0xF0)|(this.registers.L >>4);
+                                            if(this.registers.L==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }                    
+                                    break;
+                                    case 0x08://SRL B
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.B&1;
+                                            this.registers.B = this.registers.B >> 1;
+                                            if(this.registers.B==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://SRL C
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.C&1;
+                                            this.registers.C = this.registers.C >> 1;
+                                            if(this.registers.C==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;
+                                    case 0x0A://SRL D
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.D&1;
+                                            this.registers.D = this.registers.D >> 1;
+                                            if(this.registers.D==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }             
+                                    break;
+                                    case 0x0B://SRL E
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.E&1;
+                                            this.registers.E = this.registers.E >> 1;
+                                            if(this.registers.E==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }    
+                                    break;
+                                    case 0x0C://SRL H
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.H&1;
+                                            this.registers.H = this.registers.H >> 1;
+                                            if(this.registers.H==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;
+                                    case 0x0D://SRL L
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.L&1;
+                                            this.registers.L = this.registers.L >> 1;
+                                            if(this.registers.L==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0E://SRL [HL]
+                                        if(this.extracycle==4){
+                                            let rawdata = this.memory.readByte(this.HL);
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = rawdata&1;
+                                            rawdata = rawdata >> 1;
+                                            if(rawdata==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.memory.writeByte(this.HL,rawdata);
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0F://SRL A
+                                        if(this.extracycle==2){                       
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 0;
+                                            this.CFLAG = this.registers.A&1;
+                                            this.registers.A = this.registers.A >> 1;
+                                            if(this.registers.A==0) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }             
+                                    break;                                                                                                                                                           
+                                }
+                            break;
+                            case 0x04:
+                                switch(LN2){
+                                    case 0x00://BIT 0, B
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.B&1) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://BIT 0, C
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.C&1) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x02://BIT 0, D
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.D&1) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x03://BIT 0, E
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.E&1) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x04://BIT 0, H
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.H&1) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x05://BIT 0, L
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.L&1) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x06://BIT 0, [HL]
+                                        if(this.extracycle==3){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.memory.readByte(this.HL)&1) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x07://BIT 0, A
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.A&1) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x08://BIT 1, B
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.B&2) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://BIT 1, C
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.C&2) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0A://BIT 1, D
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.D&2) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0B://BIT 1, E
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.E&2) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0C://BIT 1, H
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.H&2) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0D://BIT 1, L
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.L&2) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0E://BIT 1, [HL]
+                                        if(this.extracycle==3){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.memory.readByte(this.HL)&2) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x0F://BIT 1, A
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.A&2) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                                                                                                                                    
+                                }
+                            break;
+                            case 0x05:
+                                switch(LN2){
+                                    case 0x00://BIT 2, B
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.B&4) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://BIT 2, C
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.C&4) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x02://BIT 2, D
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.D&4) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x03://BIT 2, E
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.E&4) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x04://BIT 2, H
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.H&4) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x05://BIT 2, L
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.L&4) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x06://BIT 2, [HL]
+                                        if(this.extracycle==3){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.memory.readByte(this.HL)&4) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x07://BIT 2, A
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.A&4) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x08://BIT 3, B
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.B&8) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://BIT 3, C
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.C&8) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0A://BIT 3, D
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.D&8) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0B://BIT 3, E
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.E&8) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0C://BIT 3, H
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.H&8) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0D://BIT 3, L
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.L&8) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0E://BIT 3, [HL]
+                                        if(this.extracycle==3){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.memory.readByte(this.HL)&8) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x0F://BIT 3, A
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.A&8) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                                                                                                                                    
+                                }
+                            break; 
+                            case 0x06:
+                                switch(LN2){
+                                    case 0x00://BIT 4, B
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.B&16) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://BIT 4, C
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.C&16) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x02://BIT 4, D
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.D&16) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x03://BIT 4, E
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.E&16) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x04://BIT 4, H
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.H&16) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x05://BIT 4, L
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.L&16) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x06://BIT 4, [HL]
+                                        if(this.extracycle==3){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.memory.readByte(this.HL)&16) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x07://BIT 4, A
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.A&16) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x08://BIT 5, B
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.B&32) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://BIT 5, C
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.C&32) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0A://BIT 5, D
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.D&32) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0B://BIT 5, E
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.E&32) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0C://BIT 5, H
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.H&32) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0D://BIT 5, L
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.L&32) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0E://BIT 5, [HL]
+                                        if(this.extracycle==3){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.memory.readByte(this.HL)&32) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x0F://BIT 5, A
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.A&32) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                                                                                                                                    
+                                }
+                            break;                            
+                            case 0x07:
+                                switch(LN2){
+                                    case 0x00://BIT 6, B
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.B&64) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://BIT 6, C
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.C&64) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x02://BIT 6, D
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.D&64) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x03://BIT 6, E
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.E&64) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x04://BIT 6, H
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.H&64) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x05://BIT 6, L
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.L&64) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x06://BIT 6, [HL]
+                                        if(this.extracycle==3){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.memory.readByte(this.HL)&64) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x07://BIT 6, A
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.A&64) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x08://BIT 7, B
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.B&128) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://BIT 7, C
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.C&128) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0A://BIT 7, D
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.D&128) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0B://BIT 7, E
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.E&128) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0C://BIT 7, H
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.H&128) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0D://BIT 7, L
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.L&128) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0E://BIT 7, [HL]
+                                        if(this.extracycle==3){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.memory.readByte(this.HL)&128) this.ZFLAG = 0; 
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x0F://BIT 7, A
+                                        if(this.extracycle==2){
+                                            this.NFLAG = 0;
+                                            this.HFLAG = 1;
+                                            if(this.registers.A&128) this.ZFLAG = 0;
+                                            else this.ZFLAG = 1;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                                                                                                                                    
+                                }
+                            break;  
+                            case 0x08:
+                                switch(LN2){
+                                    case 0x00://RES 0, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B & 0b11111110;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://RES 0, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C & 0b11111110;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x02://RES 0, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D & 0b11111110;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x03://RES 0, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E & 0b11111110;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x04://RES 0, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H & 0b11111110;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x05://RES 0, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L & 0b11111110;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x06://RES 0, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b11111110));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x07://RES 0, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A & 0b11111110;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;
+                                    case 0x08://RES 1, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B & 0b11111101;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://RES 1, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C & 0b11111101;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0A://RES 1, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D & 0b11111101;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0B://RES 1, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E & 0b11111101;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x0C://RES 1, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H & 0b11111101;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0D://RES 1, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L & 0b11111101;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x0E://RES 1, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b11111101));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x0F://RES 1, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A & 0b11111101;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;                                                                                                                                                
+                                }
+                            break;                            
+                            case 0x09:
+                                switch(LN2){
+                                    case 0x00://RES 2, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B & 0b11111011;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://RES 2, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C & 0b11111011;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x02://RES 2, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D & 0b11111011;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x03://RES 2, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E & 0b11111011;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x04://RES 2, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H & 0b11111011;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x05://RES 2, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L & 0b11111011;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x06://RES 2, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b11111011));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x07://RES 2, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A & 0b11111011;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;
+                                    case 0x08://RES 3, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B & 0b11110111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://RES 3, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C & 0b11110111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0A://RES 3, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D & 0b11110111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0B://RES 3, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E & 0b11110111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x0C://RES 3, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H & 0b11110111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0D://RES 3, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L & 0b11110111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x0E://RES 3, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b11110111));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x0F://RES 3, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A & 0b11110111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;                                                                                                                                                
+                                }
+                            break;
+                            case 0x0A:
+                                switch(LN2){
+                                    case 0x00://RES 4, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B & 0b11101111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://RES 4, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C & 0b11101111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x02://RES 4, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D & 0b11101111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x03://RES 4, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E & 0b11101111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x04://RES 4, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H & 0b11101111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x05://RES 4, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L & 0b11101111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x06://RES 4, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b11101111));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x07://RES 4, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A & 0b11101111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;
+                                    case 0x08://RES 5, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B & 0b11011111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://RES 5, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C & 0b11011111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0A://RES 5, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D & 0b11011111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0B://RES 5, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E & 0b11011111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x0C://RES 5, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H & 0b11011111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0D://RES 5, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L & 0b11011111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x0E://RES 5, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b11011111));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x0F://RES 5, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A & 0b11011111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;                                                                                                                                                
+                                }
+                            break;
+                            case 0x0B:
+                                switch(LN2){
+                                    case 0x00://RES 6, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B & 0b10111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://RES 6, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C & 0b10111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x02://RES 6, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D & 0b10111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x03://RES 6, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E & 0b10111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x04://RES 6, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H & 0b10111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x05://RES 6, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L & 0b10111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x06://RES 6, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b10111111));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x07://RES 6, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A & 0b10111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;
+                                    case 0x08://RES 7, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B & 0b01111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://RES 7, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C & 0b01111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0A://RES 7, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D & 0b01111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0B://RES 7, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E & 0b01111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x0C://RES 7, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H & 0b01111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0D://RES 7, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L & 0b01111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x0E://RES 7, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b01111111));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x0F://RES 7, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A & 0b01111111;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;                                                                                                                                                
+                                }
+                            break;
+                            case 0x0C:
+                                switch(LN2){
+                                    case 0x00://SET 0, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B | 0b00000001;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://SET 0, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C | 0b00000001;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x02://SET 0, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D | 0b00000001;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x03://SET 0, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E | 0b00000001;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x04://SET 0, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H | 0b00000001;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x05://SET 0, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L | 0b00000001;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x06://SET 0, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b00000001));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x07://SET 0, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A | 0b00000001;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;
+                                    case 0x08://SET 1, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B | 0b00000010;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://SET 1, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C | 0b00000010;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0A://SET 1, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D | 0b00000010;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0B://SET 1, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E | 0b00000010;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x0C://SET 1, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H | 0b00000010;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0D://SET 1, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L | 0b00000010;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x0E://SET 1, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b00000010));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x0F://SET 1, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A | 0b00000010;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;                                                                                                                                                
+                                }
+                            break;
+                            case 0x0D:
+                                switch(LN2){
+                                    case 0x00://SET 2, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B | 0b00000100;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://SET 2, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C | 0b00000100;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x02://SET 2, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D | 0b00000100;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x03://SET 2, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E | 0b00000100;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x04://SET 2, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H | 0b00000100;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x05://SET 2, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L | 0b00000100;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x06://SET 2, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b00000100));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x07://SET 2, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A | 0b00000100;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;
+                                    case 0x08://SET 3, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B | 0b00001000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://SET 3, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C | 0b00001000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0A://SET 3, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D | 0b00001000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0B://SET 3, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E | 0b00001000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x0C://SET 3, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H | 0b00001000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0D://SET 3, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L | 0b00001000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x0E://SET 3, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b00001000));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x0F://SET 3, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A | 0b00001000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;                                                                                                                                                
+                                }
+                            break;
+                            case 0x0E:
+                                switch(LN2){
+                                    case 0x00://SET 4, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B | 0b00010000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://SET 4, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C | 0b00010000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x02://SET 4, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D | 0b00010000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x03://SET 4, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E | 0b00010000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x04://SET 4, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H | 0b00010000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x05://SET 4, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L | 0b00010000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x06://SET 4, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b00010000));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x07://SET 4, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A | 0b00010000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;
+                                    case 0x08://SET 5, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B | 0b00100000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://SET 5, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C | 0b00100000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0A://SET 5, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D | 0b00100000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0B://SET 5, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E | 0b00100000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x0C://SET 5, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H | 0b00100000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0D://SET 5, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L | 0b00100000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x0E://SET 5, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b00100000));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x0F://SET 5, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A | 0b00100000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;                                                                                                                                                
+                                }
+                            break;
+                            case 0x0F:
+                                switch(LN2){
+                                    case 0x00://SET 6, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B | 0b01000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x01://SET 6, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C | 0b01000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x02://SET 6, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D | 0b01000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x03://SET 6, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E | 0b01000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x04://SET 6, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H | 0b01000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x05://SET 6, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L | 0b01000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x06://SET 6, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b01000000));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x07://SET 6, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A | 0b01000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;
+                                    case 0x08://SET 7, B
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.B | 0b10000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x09://SET 7, C
+                                        if(this.extracycle==2){
+                                            this.registers.B = this.registers.C | 0b10000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;
+                                    case 0x0A://SET 7, D
+                                        if(this.extracycle==2){
+                                            this.registers.D = this.registers.D | 0b10000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0B://SET 7, E
+                                        if(this.extracycle==2){
+                                            this.registers.E = this.registers.E | 0b10000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }      
+                                    break;
+                                    case 0x0C://SET 7, H
+                                        if(this.extracycle==2){
+                                            this.registers.H = this.registers.H | 0b10000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }        
+                                    break;
+                                    case 0x0D://SET 7, L
+                                        if(this.extracycle==2){
+                                            this.registers.L = this.registers.L | 0b10000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }       
+                                    break;
+                                    case 0x0E://SET 7, [HL]
+                                        if(this.extracycle==4){
+                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b10000000));
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }           
+                                    break;                                    
+                                    case 0x0F://SET 7, A
+                                        if(this.extracycle==2){
+                                            this.registers.A = this.registers.A | 0b10000000;
+                                            this.extracycle = 0;
+                                            this.PC+=2;
+                                        }               
+                                    break;                                                                                                                                                
+                                }
+                            break;                                                                                                                                                                                                                                                   
                         }
 
 
