@@ -1,5 +1,8 @@
-import {gabememory} from './memory.js';
-import { GABECPU } from './cpu.js';
+
+
+
+
+// show canvas after 1 big batch so it shows 60hz or smth
 
 export class GABEPPU{
     constructor(CPU){

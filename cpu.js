@@ -1,4 +1,4 @@
-import {gabememory} from './memory.js';
+
 const inturruptjumptable = new Uint8Array(0x11);
 inturruptjumptable[0x01] = 0x40;
 inturruptjumptable[0x02] = 0x48;

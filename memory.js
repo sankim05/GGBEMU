@@ -1,3 +1,4 @@
+
 export class gabememory{
     constructor(){
         this.bootromstring = "31 FE FF 21 FF 9F AF 32 CB 7C 20 FA 0E 11 21 26 FF 3E 80 32 E2 0C 3E F3 32 E2 0C 3E 77 32 E2 11 04 01 21 10 80 1A CD B8 00 1A CB 37 CD B8 00 13 7B FE 34 20 F0 11 CC 00 06 08 1A 13 22 23 05 20 F9 21 04 99 01 0C 01 CD B1 00 3E 19 77 21 24 99 0E 0C CD B1 00 3E 91 E0 40 06 10 11 D4 00 78 E0 43 05 7B FE D8 28 04 1A E0 47 13 0E 1C CD A7 00 AF 90 E0 43 05 0E 1C CD A7 00 AF B0 20 E0 E0 43 3E 83 CD 9F 00 0E 27 CD A7 00 3E C1 CD 9F 00 11 8A 01 F0 44 FE 90 20 FA 1B 7A B3 20 F5 18 49 0E 13 E2 0C 3E 87 E2 C9 F0 44 FE 90 20 FA 0D 20 F7 C9 78 22 04 0D 20 FA C9 47 0E 04 AF C5 CB 10 17 C1 CB 10 17 0D 20 F5 22 23 22 23 C9 3C 42 B9 A5 B9 A5 42 3C 00 54 A8 FC 42 4F 4F 54 49 58 2E 44 4D 47 20 76 31 2E 32 00 3E FF C6 01 0B 1E D8 21 4D 01 00 00 00 00 00 00 00 00 00 00 3E 01 E0 50".replace(/\s/g, '');
@@ -24,10 +25,14 @@ export class gabememory{
 
         this.cartridgetype = 0;
         this.bankingmode = 0;
+        this.ppuinfo = null;
     }
 
     bankswitch(){
 
+    }
+    PPUreadbyte(address){
+        return this.bigmemory[address];
     }
 
     readByte(address){

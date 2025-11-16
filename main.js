@@ -19,7 +19,8 @@ let dpadbitsB = 0xF;
 
 const memory = new gabememory();
 const cpu = new GABECPU(memory);
-const ppu = new GABEPPU(memory,cpu);
+const ppu = new GABEPPU(memory);
+memory.ppuinfo = ppu;
 
 
 
