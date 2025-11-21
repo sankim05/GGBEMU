@@ -19,21 +19,18 @@ let dpadbitsB = 0xF;
 
 const memory = new gabememory();
 const cpu = new GABECPU(memory);
-const ppu = new GABEPPU(memory);
+const ppu = new GABEPPU(memory,ctx);
 memory.ppuinfo = ppu;
-
-
 
 var canvas = document.getElementById("Display");
 if (canvas.getContext) {
 var ctx = canvas.getContext("2d"); 
 ctx.fillStyle = "rgb(0, 0, 0)"
-// rgb(100, 48, 122);
-// rgb(142,68,173)
-// rgb(155,89,182)
-// rgb(183,137,203)
 ctx.fillRect(0, 0, 480, 432);
+ppu.canvas = ctx;
 }
+
+
 
 function updateinput(){
     let btnmask = 0;

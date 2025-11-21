@@ -21,7 +21,7 @@ export class gabememory{
         this.rom = null; // big very
         //0x0100-014F cartridge header 80B
 
-
+        this.OAMtransfercycle = 0;
 
         this.cartridgetype = 0;
         this.bankingmode = 0;
@@ -31,10 +31,12 @@ export class gabememory{
     bankswitch(){
 
     }
-    PPUreadbyte(address){
+    PPUreadByte(address){
         return this.bigmemory[address];
     }
-
+    PPUwriteByte(address,value){
+        this.bigmemory[address] = value;
+    }
     readByte(address){
         return this.bigmemory[address];
 
@@ -59,7 +61,19 @@ export class gabememory{
             if(address>=0xC000&&address<=0xDDFF){
                 this.bigmemory[address+0x2000] = value;
             }
-            
+            if(address>=0xFF00&&address<=0xFF7F){
+                switch(address){
+                    case 0xFF46:
+                        this.bigmemory[address] = value;
+                        this.OAMtransfercycle = 1;
+                    break;
+
+
+                    default:
+                        this.bigmemory[address] = value;
+                    break;
+                }
+            }
             
 
         }
@@ -96,6 +110,7 @@ export class gabememory{
         this.bigmemory[0xFF00] = 0xFF;
         this.cartridgetype = 0;
         this.bankingmode = 0;
+        this.OAMtransfercycle = 0;
         if(this.rom!=null){
             this.loadrom();
         }

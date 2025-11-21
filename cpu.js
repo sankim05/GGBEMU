@@ -1,10 +1,10 @@
 
-const inturruptjumptable = new Uint8Array(0x11);
-inturruptjumptable[0x01] = 0x40;
-inturruptjumptable[0x02] = 0x48;
-inturruptjumptable[0x04] = 0x50;
-inturruptjumptable[0x08] = 0x58;
-inturruptjumptable[0x10] = 0x60;
+const interruptjumptable = new Uint8Array(0x11);
+interruptjumptable[0x01] = 0x40;
+interruptjumptable[0x02] = 0x48;
+interruptjumptable[0x04] = 0x50;
+interruptjumptable[0x08] = 0x58;
+interruptjumptable[0x10] = 0x60;
 export class GABECPU{
     constructor(memory){
         this.memory = memory;
@@ -24,7 +24,7 @@ export class GABECPU{
         this.stopped = false;
         this.ishalted = false;
         this.haltfail = false;
-        this.currentinturrupt = 0;
+        this.currentinterrupt = 0;
         
         this.mcycle = 0;
 
@@ -94,13 +94,13 @@ export class GABECPU{
         this.stopped = false;
         this.ishalted = false;
         this.haltfail = false;
-        this.currentinturrupt = 0;
+        this.currentinterrupt = 0;
         this.mcycle = 0;
 
         this.extracycle = 0; // actually wait until it hits and reset to 0 when finished instruction
       
     }
-    checkinturrupt(){
+    checkinterrupt(){
         return this.memory.readByte(0xFFFF)&this.memory.readByte(0xFF0F);
     }
     checkbtn(){
@@ -196,17 +196,17 @@ export class GABECPU{
            
         } 
         if(this.ishalted){
-            if(this.checkinturrupt()){
+            if(this.checkinterrupt()){
                 if(this.IME){
                     this.ishalted = false;
                     let bos = 0;
                     for(let i=1;i<=0x10;i = i<<1){
-                        if(this.checkinturrupt()&i){
+                        if(this.checkinterrupt()&i){
                             bos = i;
                             break;
                         }
                     }
-                    this.currentinturrupt = bos;
+                    this.currentinterrupt = bos;
                     
                 }else{
                     this.ishalted = false;
@@ -219,26 +219,26 @@ export class GABECPU{
         
         this.extracycle++;
         if(this.IME){
-            if(this.currentinturrupt){
+            if(this.currentinterrupt){
                 if(this.extracycle==5){
                     this.IME = false;
-                    this.PC = this.inturruptjumptable[this.currentinturrupt];
-                    this.currentinturrupt = 0;
+                    this.PC = this.interruptjumptable[this.currentinterrupt];
+                    this.currentinterrupt = 0;
                 }else if(this.extracycle==1){
                     this.memory.writeByte(this.SP-1,this.PC>>8);
                 }else if(this.extracycle==2){
                     this.memory.writeByte(this.SP-2,this.PC&0xFF);
                     this.SP-=2;
                 }
-            }else if(this.extracycle==1&&this.checkinturrupt()){
+            }else if(this.extracycle==1&&this.checkinterrupt()){
                     let bos = 0;
                     for(let i=1;i<=0x10;i = i<<1){
-                        if(this.checkinturrupt()&i){
+                        if(this.checkinterrupt()&i){
                             bos = i;
                             break;
                         }
                     }
-                    this.currentinturrupt = bos;
+                    this.currentinterrupt = bos;
                     return;
             }
         }
@@ -252,7 +252,12 @@ export class GABECPU{
             this.byte3 = byte2;
             this.PC--;
             this.haltfail = false;
-        }              
+        }
+        if(this.memory.OAMtransfercycle){
+            this.memory.PPUwriteByte(0xFE00|(this.memory.OAMtransfercycle-1),this.memory.PPUreadByte(this.memory.PPUreadByte(0xFF46)|(this.memory.OAMtransfercycle-1)));
+            this.memory.OAMtransfercycle++;
+            if(this.memory.OAMtransfercycle==161) this.memory.OAMtransfercycle = 0;
+        }
         const HN1 = byte1 >> 4; // high nibble
         const LN1 = byte1 & 0x0F; // low nibble
         switch(HN1){
@@ -407,12 +412,12 @@ export class GABECPU{
                     case 0x00: // STOP n8
                         if(this.extracycle==1){ // fill later
                             if(this.checkbtn()){
-                                if(!this.checkinturrupt()){
+                                if(!this.checkinterrupt()){
                                     this.PC++;
                                     this.ishalted = true;
                                 }
                             }else{
-                                if(!this.checkinturrupt())this.PC++;
+                                if(!this.checkinterrupt())this.PC++;
                                 this.stopped = true;
                                 this.writeByte(0xFF04,0);
                             }
@@ -1336,7 +1341,7 @@ export class GABECPU{
                     break;
                     case 0x06: // HALT                  
                         if(this.extracycle==1){
-                            if(!this.IME&&this.checkinturrupt()){
+                            if(!this.IME&&this.checkinterrupt()){
                                 this.haltfail = true;
                             }
                             else this.ishalted = true;
