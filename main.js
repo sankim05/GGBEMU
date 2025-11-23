@@ -19,7 +19,7 @@ let dpadbitsB = 0xF;
 
 const memory = new gabememory();
 const cpu = new GABECPU(memory);
-const ppu = new GABEPPU(memory,ctx);
+const ppu = new GABEPPU(memory);
 memory.ppuinfo = ppu;
 
 var canvas = document.getElementById("Display");
@@ -45,7 +45,7 @@ function updateinput(){
     let finval = ((btnbitsB&btnbitsK)|btnmask) & ((dpadbitsB&dpadbitsK)|dpadmask);
     memory.writeByte(0xFF00,(statusx&0x30)|finval);
 
-    //console.log(finval.toString(2));
+    //console.log(memory.readByte(0xFF00).toString(2));
 }
 
 
@@ -61,7 +61,7 @@ function reset(){
     cpu.reset();
     ppu.reset();
     memory.reset();
-    ppu.showscreen(ctx);
+   
     debuggers.showall();
 };
 
@@ -95,11 +95,16 @@ function runLoop(now) {
 
   if (accTimer >= msPerTimer) {
         debuggers.showall();
+        //console.log(cpu.IME);
+        //console.log(cpu.ishalted);
+        //console.log(cpu.stopped);
+        //console.log(cpu.checkbtn());
+        //console.log(memory.PPUreadByte(cpu.PC).toString(16));
     accTimer -= msPerTimer;
   }  
   while (accTime >= msPerTick) {
     tcycle++;
-    if(tcycle%4==0)cpu.cyclerun();
+    if(tcycle%4===0)cpu.cyclerun();
     ppu.cyclerun();
     accTime -= msPerTick;
   }
@@ -383,3 +388,5 @@ document.addEventListener("keyup",function(event){
         break;                         
     }
 });
+
+reset();
