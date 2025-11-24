@@ -19,13 +19,12 @@ export class GABECPU{
             L : 0x00
         } 
         this.PC = 0x0000;
-        this.SP = 0xFFFF;
+        this.SP = 0xFFFE;
         this.IME = false;
         this.stopped = false;
         this.ishalted = false;
         this.haltfail = false;
         this.currentinterrupt = 0;
-        
         this.mcycle = 0;
 
     }
@@ -61,25 +60,25 @@ export class GABECPU{
         return (this.registers.F & 128)>>7;
     }
     set ZFLAG(val){ // 1 or 0 
-        this.registers.F = this.registers.F & 0b01110000 | (val << 7);
+        this.registers.F = (this.registers.F & 0b01110000) | (val << 7);
     }
     get NFLAG(){
         return (this.registers.F & 64)>>6;
     }
     set NFLAG(val){
-        this.registers.F = this.registers.F & 0b10110000 | (val << 6);
+        this.registers.F = (this.registers.F & 0b10110000) | (val << 6);
     } 
     get HFLAG(){
         return (this.registers.F & 32)>>5;
     }
     set HFLAG(val){
-        this.registers.F = this.registers.F & 0b11010000 | (val << 5);
+        this.registers.F = (this.registers.F & 0b11010000) | (val << 5);
     }
     get CFLAG(){
         return (this.registers.F & 16)>>4;
     }
     set CFLAG(val){
-        this.registers.F = this.registers.F & 0b11100000 | (val << 4);
+        this.registers.F = (this.registers.F & 0b11100000) | (val << 4);
     }        
 
     reset(){
@@ -104,7 +103,7 @@ export class GABECPU{
         return this.memory.readByte(0xFFFF)&this.memory.readByte(0xFF0F);
     }
     checkbtn(){
-        if(this.memory.readByte(0xFF00)&0x30!==0x30){
+        if((this.memory.readByte(0xFF00)&0x30)!==0x30){
             return (~this.memory.readByte(0xFF00))&0x0F;
         }
         return 0;
@@ -129,7 +128,7 @@ export class GABECPU{
 
            
         
-        if(res===0) this.ZFLAG = 1;
+        if((res&0xFF)===0) this.ZFLAG = 1;
         else this.ZFLAG = 0;
 
 
@@ -158,7 +157,7 @@ export class GABECPU{
 
            
         
-        if(res===0) this.ZFLAG = 1;
+        if((res&0xFF)===0) this.ZFLAG = 1;
         else this.ZFLAG = 0;
 
 
@@ -188,13 +187,48 @@ export class GABECPU{
         // DO SEPARATE CLOCK ACT WHEN MESSING WITH MEMORY(for ppu's)
         // especially when writing
         this.mcycle++;
+        if(this.mcycle==Number.MAX_SAFE_INTEGER) this.mcycle = 0;
         if(this.stopped){
             if(this.checkbtn()){
                 this.stopped = false;
 
             }else return; 
            
-        } 
+        }
+        if(this.mcycle%4096===0) this.memory.incrementdiv(); 
+        if(this.memory.readByte(0xFF07)&4){
+            let incz = false;
+            switch(this.memory.readByte(0xFF07)&3){
+                case 0:
+                    if(this.mcycle%256===0){
+                        this.memory.writeByte(0xFF05,(this.memory.readByte(0xFF05)+1)&0xFFFF);
+                        incz = true;
+                    }
+                break;
+                case 1:
+                    if(this.mcycle%4===0){
+                        this.memory.writeByte(0xFF05,(this.memory.readByte(0xFF05)+1)&0xFFFF);
+                        incz = true;
+                    }               
+                break;
+                case 2:
+                    if(this.mcycle%16===0){
+                        this.memory.writeByte(0xFF05,(this.memory.readByte(0xFF05)+1)&0xFFFF);
+                        incz = true;
+                    }                
+                break;
+                case 3:
+                    if(this.mcycle%64===0){
+                        this.memory.writeByte(0xFF05,(this.memory.readByte(0xFF05)+1)&0xFFFF);
+                        incz = true;
+                    }                
+                break;                                  
+            }
+            if(incz&&this.memory.readByte(0xFF05)===0){
+                this.memory.writeByte(0xFF05,this.memory.readByte(0xFF06));
+                this.memory.writeByte(0xFF0F,this.memory.readByte(0xFF0F)|4);
+            }
+        }
         if(this.ishalted){
             if(this.checkinterrupt()){
                 
@@ -220,18 +254,24 @@ export class GABECPU{
         
         
         this.extracycle++;
+
         if(this.IME){
             if(this.currentinterrupt){
+
                 if(this.extracycle===5){
                     this.IME = false;
+                    this.memory.writeByte(0xFF0F,this.memory.readByte(0xFF0F) & (~this.currentinterrupt));
                     this.PC = interruptjumptable[this.currentinterrupt];
                     this.currentinterrupt = 0;
-                }else if(this.extracycle===1){
+                    this.extracycle = 0;
+                    
+                }else if(this.extracycle===3){
                     this.memory.writeByte(this.SP-1,this.PC>>8);
-                }else if(this.extracycle===2){
+                }else if(this.extracycle===4){
                     this.memory.writeByte(this.SP-2,this.PC&0xFF);
                     this.SP-=2;
                 }
+                return;
             }else if(this.extracycle===1&&this.checkinterrupt()){
                     let bos = 0;
                     for(let i=1;i<=0x10;i = i<<1){
@@ -241,9 +281,11 @@ export class GABECPU{
                         }
                     }
                     this.currentinterrupt = bos;
-                    return;
+                    //console.log(bos);
+                return;
             }
         }
+
         const byte1 = this.memory.readByte(this.PC);
 
         let byte2 = this.memory.readByte(this.PC+1);
@@ -252,7 +294,7 @@ export class GABECPU{
         if(this.haltfail){
             byte2 = byte1;
             byte3 = byte2;
-            this.PC--;
+            //this.PC--;
             this.haltfail = false;
         }
         if(this.memory.OAMtransfercycle){
@@ -494,10 +536,10 @@ export class GABECPU{
                         if(this.extracycle===3){
                             
                             
-                            const pos = (128 + byte2)&255-128;
+                            const pos = ((128 + byte2)&255)-128;
                             //console.log(pos);
                             this.extracycle = 0;
-                            this.PC= this.PC + 2 + pos;
+                            this.PC= this.PC + pos + 2;
                         }
                     break;   
                     case 0x09: // ADD HL,DE
@@ -576,7 +618,7 @@ export class GABECPU{
 
                         }else{
                         if(this.extracycle===3){
-                            const pos = (128 + byte2)&255-128;
+                            const pos = ((128 + byte2)&255)-128;
                             this.extracycle = 0;
                             this.PC= this.PC + 2 + pos;
                         }   
@@ -645,7 +687,7 @@ export class GABECPU{
                                 //if(this.registers.A<adj) this.CFLAG = 1;
                                 this.registers.A = (this.registers.A-adj)&0xFFFF;
                             }else{
-                                if(this.HFLAG||this.registers.A&0xF>0x9) adj+= 0x6;
+                                if(this.HFLAG||(this.registers.A&0xF)>0x9) adj+= 0x6;
                                 if(this.CFLAG||this.registers.A>0x99){
                                     this.CFLAG = 1;
                                     adj+= 0x60;
@@ -656,7 +698,7 @@ export class GABECPU{
                                     //this.CFLAG = 1;
                                 }
                             }
-                            if(this.registers.A===0) this.ZFLAG = 0;
+                            if(this.registers.A===0) this.ZFLAG = 1;
                             
                             this.HFLAG = 0;
 
@@ -673,9 +715,9 @@ export class GABECPU{
 
                         }else{
                         if(this.extracycle===3){
-                            const pos = (128 + byte2)&255-128;
+                            const pos = ((128 + byte2)&255)-128;
                             this.extracycle = 0;
-                            this.PC= this.PC + 2 + pos;
+                            this.PC= this.PC + pos + 2;
                         }   
 
 
@@ -756,9 +798,9 @@ export class GABECPU{
 
                         }else{
                         if(this.extracycle===3){
-                            const pos = (128 + byte2)&255-128;
+                            const pos = ((128 + byte2)&255)-128;
                             this.extracycle = 0;
-                            this.PC= this.PC + 2 + pos;
+                            this.PC= this.PC + pos + 2;
                         }   
 
 
@@ -836,9 +878,9 @@ export class GABECPU{
 
                         }else{
                         if(this.extracycle===3){
-                            const pos = (128 + byte2)&255-128;
+                            const pos = ((128 + byte2)&255)-128;
                             this.extracycle = 0;
-                            this.PC= this.PC + 2 + pos;
+                            this.PC= this.PC + pos + 2;
                         }   
 
 
@@ -2238,8 +2280,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.B>>7;
                                             this.registers.B = ((this.registers.B << 1) | this.CFLAG)&0xFF;
-                                            if(this.registers.B===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.B===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2251,8 +2293,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.C>>7;
                                             this.registers.C = ((this.registers.C << 1) | this.CFLAG)&0xFF;
-                                            if(this.registers.C===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.C===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2264,8 +2306,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.D>>7;
                                             this.registers.D = ((this.registers.D << 1) | this.CFLAG)&0xFF;
-                                            if(this.registers.D===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.D===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2277,8 +2319,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.E>>7;
                                             this.registers.E = ((this.registers.E << 1) | this.CFLAG)&0xFF;
-                                            if(this.registers.E===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.E===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2290,8 +2332,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.H>>7;
                                             this.registers.H = ((this.registers.H << 1) | this.CFLAG)&0xFF;
-                                            if(this.registers.H===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.H===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2303,8 +2345,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.L>>7;
                                             this.registers.L = ((this.registers.L << 1) | this.CFLAG)&0xFF;
-                                            if(this.registers.L===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.L===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2316,8 +2358,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = rawdata>>7;
                                             rawdata = ((rawdata << 1) | this.CFLAG)&0xFF;
-                                            if(rawdata===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(rawdata===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.memory.writeByte(this.HL,rawdata);
                                             this.extracycle = 0;
                                             this.PC+=2;
@@ -2330,8 +2372,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.A>>7;
                                             this.registers.A = ((this.registers.A << 1) | this.CFLAG)&0xFF;
-                                            if(this.registers.A===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.A===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2343,8 +2385,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.B&1;
                                             this.registers.B = ((this.registers.B >> 1) | (this.CFLAG<<7));
-                                            if(this.registers.B===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.B===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2356,8 +2398,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.C&1;
                                             this.registers.C = ((this.registers.C >> 1) | (this.CFLAG<<7));
-                                            if(this.registers.C===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.C===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2369,8 +2411,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.D&1;
                                             this.registers.D = ((this.registers.D >> 1) | (this.CFLAG<<7));
-                                            if(this.registers.D===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.D===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2382,8 +2424,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.E&1;
                                             this.registers.E = ((this.registers.E >> 1) | (this.CFLAG<<7));
-                                            if(this.registers.E===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.E===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2395,8 +2437,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.H&1;
                                             this.registers.H = ((this.registers.H >> 1) | (this.CFLAG<<7));
-                                            if(this.registers.H===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.H===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2408,8 +2450,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.L&1;
                                             this.registers.L = ((this.registers.L >> 1) | (this.CFLAG<<7));
-                                            if(this.registers.L===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.L===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2421,8 +2463,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = rawdata&1;
                                             rawdata = ((rawdata >> 1) | (this.CFLAG<<7));
-                                            if(rawdata===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(rawdata===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.memory.writeByte(this.HL,rawdata);
                                             this.extracycle = 0;
                                             this.PC+=2;
@@ -2435,8 +2477,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.A&1;
                                             this.registers.A = ((this.registers.A >> 1) | (this.CFLAG<<7));
-                                            if(this.registers.A===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.A===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2452,8 +2494,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.B>>7;
                                             this.registers.B = ((this.registers.B << 1) | cs)&0xFF;
-                                            if(this.registers.B===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.B===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2465,8 +2507,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.C>>7;
                                             this.registers.C = ((this.registers.C << 1) | cs)&0xFF;
-                                            if(this.registers.C===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.C===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }            
@@ -2478,8 +2520,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.D>>7;
                                             this.registers.D = ((this.registers.D << 1) | cs)&0xFF;
-                                            if(this.registers.D===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.D===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }          
@@ -2491,8 +2533,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.E>>7;
                                             this.registers.E = ((this.registers.E << 1) | cs)&0xFF;
-                                            if(this.registers.E===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.E===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }       
@@ -2504,8 +2546,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.H>>7;
                                             this.registers.H = ((this.registers.H << 1) | cs)&0xFF;
-                                            if(this.registers.H===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.H===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2517,8 +2559,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.L>>7;
                                             this.registers.L = ((this.registers.L << 1) | cs)&0xFF;
-                                            if(this.registers.L===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.L===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2531,8 +2573,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = rawdata>>7;
                                             rawdata = ((rawdata << 1) | cs)&0xFF;
-                                            if(rawdata===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(rawdata===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.memory.writeByte(this.HL,rawdata);
                                             this.extracycle = 0;
                                             this.PC+=2;
@@ -2546,8 +2588,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.A>>7;
                                             this.registers.A = ((this.registers.A << 1) | cs)&0xFF;
-                                            if(this.registers.A===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.A===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2559,8 +2601,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.B&1;
                                             this.registers.B = ((this.registers.B >> 1) | (cs<<7));
-                                            if(this.registers.B===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.B===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2572,8 +2614,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.C&1;
                                             this.registers.C = ((this.registers.C >> 1) | (cs<<7));
-                                            if(this.registers.C===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.C===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2586,8 +2628,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.D&1;
                                             this.registers.D = ((this.registers.D >> 1) | (cs<<7));
-                                            if(this.registers.D===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.D===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2599,8 +2641,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.E&1;
                                             this.registers.E = ((this.registers.E >> 1) | (cs<<7));
-                                            if(this.registers.E===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.E===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }
@@ -2613,8 +2655,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.H&1;
                                             this.registers.H = ((this.registers.H >> 1) | (cs<<7));
-                                            if(this.registers.H===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.H===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2627,8 +2669,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.L&1;
                                             this.registers.L = ((this.registers.L >> 1) | (cs<<7));
-                                            if(this.registers.L===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.L===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2641,8 +2683,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = rawdata&1;
                                             rawdata = ((rawdata >> 1) | (cs<<7));
-                                            if(rawdata===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(rawdata===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.memory.writeByte(this.HL,rawdata);
                                             this.extracycle = 0;
                                             this.PC+=2;
@@ -2656,8 +2698,8 @@ export class GABECPU{
                                             const cs = this.CFLAG;
                                             this.CFLAG = this.registers.A&1;
                                             this.registers.A = ((this.registers.A >> 1) | (cs<<7));
-                                            if(this.registers.A===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.A===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2672,8 +2714,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.B>>7;
                                             this.registers.B = (this.registers.B << 1)&0xFF;
-                                            if(this.registers.B===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.B===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2684,8 +2726,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.C>>7;
                                             this.registers.C = (this.registers.C << 1)&0xFF;
-                                            if(this.registers.C===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.C===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }              
@@ -2696,8 +2738,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.D>>7;
                                             this.registers.D = (this.registers.D << 1)&0xFF;
-                                            if(this.registers.D===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.D===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }         
@@ -2708,8 +2750,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.E>>7;
                                             this.registers.E = (this.registers.E << 1)&0xFF;
-                                            if(this.registers.E===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.E===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }       
@@ -2720,8 +2762,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.H>>7;
                                             this.registers.H = (this.registers.H << 1)&0xFF;
-                                            if(this.registers.H===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.H===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }       
@@ -2732,8 +2774,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.L>>7;
                                             this.registers.L = (this.registers.L << 1)&0xFF;
-                                            if(this.registers.L===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.L===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2745,8 +2787,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = rawdata>>7;
                                             rawdata = (rawdata << 1)&0xFF;
-                                            if(rawdata===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(rawdata===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.memory.writeByte(this.HL,rawdata);
                                             this.extracycle = 0;
                                             this.PC+=2;
@@ -2758,8 +2800,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.A>>7;
                                             this.registers.A = (this.registers.A << 1)&0xFF;
-                                            if(this.registers.A===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.A===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }                    
@@ -2770,8 +2812,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.B&1;
                                             this.registers.B = (this.registers.B&0x80)|(this.registers.B >> 1);
-                                            if(this.registers.B===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.B===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2782,8 +2824,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.C&1;
                                             this.registers.C = (this.registers.C&0x80)|(this.registers.C >> 1);
-                                            if(this.registers.C===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.C===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }               
@@ -2794,8 +2836,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.D&1;
                                             this.registers.D = (this.registers.D&0x80)|(this.registers.D >> 1);
-                                            if(this.registers.D===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.D===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }             
@@ -2806,8 +2848,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.E&1;
                                             this.registers.E = (this.registers.E&0x80)|(this.registers.E >> 1);
-                                            if(this.registers.E===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.E===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }    
@@ -2818,8 +2860,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.H&1;
                                             this.registers.H = (this.registers.H&0x80)|(this.registers.H >> 1);
-                                            if(this.registers.H===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.H===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }               
@@ -2830,8 +2872,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.L&1;
                                             this.registers.L = (this.registers.L&0x80)|(this.registers.L >> 1);
-                                            if(this.registers.L===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.L===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2843,8 +2885,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = rawdata&1;
                                             rawdata = (rawdata&0x80)|(rawdata >> 1);
-                                            if(rawdata===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(rawdata===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.memory.writeByte(this.HL,rawdata);
                                             this.extracycle = 0;
                                             this.PC+=2;
@@ -2856,8 +2898,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.A&1;
                                             this.registers.A = (this.registers.A&0x80)|(this.registers.A >> 1);
-                                            if(this.registers.A===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.A===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }             
@@ -2872,8 +2914,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = 0;
                                             this.registers.B = ((this.registers.B <<4)&0xF0)|(this.registers.B >>4);
-                                            if(this.registers.B===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.B===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2884,8 +2926,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = 0;
                                             this.registers.C = ((this.registers.C <<4)&0xF0)|(this.registers.C >>4);
-                                            if(this.registers.C===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.C===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }              
@@ -2896,8 +2938,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = 0;
                                             this.registers.D = ((this.registers.D <<4)&0xF0)|(this.registers.D >>4);
-                                            if(this.registers.D===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.D===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }
@@ -2908,8 +2950,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = 0;
                                             this.registers.E = ((this.registers.E <<4)&0xF0)|(this.registers.E >>4);
-                                            if(this.registers.E===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.E===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }       
@@ -2920,8 +2962,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = 0;
                                             this.registers.H = ((this.registers.H <<4)&0xF0)|(this.registers.H >>4);
-                                            if(this.registers.H===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.H===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }       
@@ -2932,8 +2974,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = 0;
                                             this.registers.L = ((this.registers.L <<4)&0xF0)|(this.registers.L >>4);
-                                            if(this.registers.L===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.L===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2945,8 +2987,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = 0;
                                             rawdata = ((rawdata <<4)&0xF0)|(rawdata >>4);
-                                            if(rawdata===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(rawdata===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.memory.writeByte(this.HL,rawdata);
                                             this.extracycle = 0;
                                             this.PC+=2;
@@ -2958,8 +3000,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = 0;
                                             this.registers.L = ((this.registers.L <<4)&0xF0)|(this.registers.L >>4);
-                                            if(this.registers.L===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.L===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }                    
@@ -2970,8 +3012,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.B&1;
                                             this.registers.B = this.registers.B >> 1;
-                                            if(this.registers.B===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.B===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -2982,8 +3024,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.C&1;
                                             this.registers.C = this.registers.C >> 1;
-                                            if(this.registers.C===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.C===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }               
@@ -2994,8 +3036,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.D&1;
                                             this.registers.D = this.registers.D >> 1;
-                                            if(this.registers.D===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.D===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }             
@@ -3006,8 +3048,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.E&1;
                                             this.registers.E = this.registers.E >> 1;
-                                            if(this.registers.E===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.E===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }    
@@ -3018,8 +3060,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.H&1;
                                             this.registers.H = this.registers.H >> 1;
-                                            if(this.registers.H===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.H===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }               
@@ -3030,8 +3072,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.L&1;
                                             this.registers.L = this.registers.L >> 1;
-                                            if(this.registers.L===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.L===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -3043,8 +3085,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = rawdata&1;
                                             rawdata = rawdata >> 1;
-                                            if(rawdata===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(rawdata===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.memory.writeByte(this.HL,rawdata);
                                             this.extracycle = 0;
                                             this.PC+=2;
@@ -3056,8 +3098,8 @@ export class GABECPU{
                                             this.HFLAG = 0;
                                             this.CFLAG = this.registers.A&1;
                                             this.registers.A = this.registers.A >> 1;
-                                            if(this.registers.A===0) this.ZFLAG = 0;
-                                            else this.ZFLAG = 1;
+                                            if(this.registers.A===0) this.ZFLAG = 1;
+                                            else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }             
@@ -5021,8 +5063,9 @@ export class GABECPU{
                             
                              this.ZFLAG = 0;
                             this.NFLAG = 0;
-                            const pos = (128 + byte2)&255-128;
+                            const pos = ((128 + byte2)&255)-128;
 
+                                if(pos>0){
                                 if(((pos&0xF)+(this.SP&0xF))>0xF){ 
                                     this.HFLAG = 1;
                                 }else{
@@ -5032,8 +5075,21 @@ export class GABECPU{
                                     this.CFLAG = 1;
                                 }else{
                                     this.CFLAG = 0;
-                                }   
-                            this.SP = this._16bitadd(this.SP,pos);                               
+                                }
+
+                                }else{
+                                if(((this.SP&0xF)-((-pos)&0xF))<0){ 
+                                    this.HFLAG = 1;
+                                }else{
+                                    this.HFLAG = 0;
+                                }
+                                if(((this.SP&0xFF)+pos)<0){ 
+                                    this.CFLAG = 1;
+                                }else{
+                                    this.CFLAG = 0;
+                                }                                    
+                                }
+                            this.SP += pos;                               
                             this.extracycle = 0;
                             this.PC+=2;
                         }    
@@ -5114,7 +5170,8 @@ export class GABECPU{
                 switch(LN1){
                     case 0x00: // LDH A,[a8]
                         if(this.extracycle===3){
-                            this.registers.A = this.memory.readByte(0xFF00|byte2);
+
+                            this.registers.A = this.memory.readByte((0xFF00|byte2));
                             this.extracycle = 0;
                             this.PC+=2;
                         }               
@@ -5205,8 +5262,8 @@ export class GABECPU{
                             
                              this.ZFLAG = 0;
                             this.NFLAG = 0;
-                            const pos = (128 + byte2)&255-128;
-
+                            const pos = ((128 + byte2)&255)-128;
+                                if(pos>0){
                                 if(((pos&0xF)+(this.SP&0xF))>0xF){ 
                                     this.HFLAG = 1;
                                 }else{
@@ -5217,8 +5274,23 @@ export class GABECPU{
                                 }else{
                                     this.CFLAG = 0;
                                 }
-                            const pos2 = this._16bitadd(this.SP,pos);  
-                            this.HL = this.memory.readByte(pos2);                                    
+
+                                }else{
+                                if(((this.SP&0xF)-((-pos)&0xF))<0){ 
+                                    this.HFLAG = 1;
+                                }else{
+                                    this.HFLAG = 0;
+                                }
+                                if(((this.SP&0xFF)+pos)<0){ 
+                                    this.CFLAG = 1;
+                                }else{
+                                    this.CFLAG = 0;
+                                }                                    
+                                }
+
+                            const pos2 = this.SP+pos;
+                            
+                            this.HL = pos2;                                    
                             this.extracycle = 0;
                             this.PC+=2;
                         }    
@@ -5268,9 +5340,11 @@ export class GABECPU{
                     break; 
                     case 0x0E: // CP A,n8               
                         if(this.extracycle===2){
+                            
                             this._8bitsub(this.registers.A,byte2);
                             this.extracycle = 0;
                             this.PC+=2;
+                            
                         }                
                     break;
                     case 0x0F: // RST $38                   
@@ -5291,6 +5365,7 @@ export class GABECPU{
 
                 break;                                                          
         }
+
 
     }
 

@@ -61,7 +61,7 @@ function reset(){
     cpu.reset();
     ppu.reset();
     memory.reset();
-   
+    ppu.showscreen();
     debuggers.showall();
 };
 
@@ -95,17 +95,22 @@ function runLoop(now) {
 
   if (accTimer >= msPerTimer) {
         debuggers.showall();
+        
+       //console.log(ppu.getly());
+      // console.log(ppu.curx);
+       
         //console.log(cpu.IME);
         //console.log(cpu.ishalted);
         //console.log(cpu.stopped);
         //console.log(cpu.checkbtn());
-        //console.log(memory.PPUreadByte(cpu.PC).toString(16));
+        //console.log(memory.PPUreadByte(0xFF40)&0x80);
     accTimer -= msPerTimer;
   }  
   while (accTime >= msPerTick) {
     tcycle++;
     if(tcycle%4===0)cpu.cyclerun();
     ppu.cyclerun();
+    if(tcycle==Number.MAX_SAFE_INTEGER) tcycle = 0;
     accTime -= msPerTick;
   }
 
@@ -133,6 +138,7 @@ document.getElementById("EmuStep").addEventListener("click",function(){
 
 
     if (!running){
+        for(let i=0;i<4;i++)ppu.cyclerun();
         cpu.cyclerun();
         ppu.showscreen(ctx);
         debuggers.showall();
