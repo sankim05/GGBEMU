@@ -20,7 +20,7 @@ export class gabememory{
         //0x0100-014F cartridge header 80B
 
         this.OAMtransfercycle = 0;
-
+        this.bigmemory = new Uint8Array(0x10000);
         this.cartridgetype = 0;
         this.bankingmode = 0;
         this.ppuinfo = null;
@@ -34,8 +34,8 @@ export class gabememory{
 
     }
     PPUreadByte(address){
-
-        return this.bigmemory[address];
+       
+        return this.bigmemory[address&0xFFFF];
     }
     PPUwriteByte(address,value){
         this.bigmemory[address] = value;
@@ -43,10 +43,19 @@ export class gabememory{
 
     
     readByte(address){
+        
+            let vramchecker = true;
+            if(this.ppuinfo.mode===2||this.ppuinfo.mode===3){
+                if(address>=0xFE00&&address<=0xFE9F) vramchecker = false;
+            }
+            if(this.ppuinfo.mode==3&&address>=0x8000&&address<=0x9FFF) vramchecker = false;
 
+            
+            if(!vramchecker) return 0xFF;        
         return this.bigmemory[address];
 
     }
+    
     writeByte(address,value){
 
         if(address<0xC000){
@@ -55,13 +64,26 @@ export class gabememory{
                     // does not write if rom area
                     if(address>=0x8000){
                         this.bigmemory[address] = value;
+                        
                     }
                 break;
-
+                default:
+                    // does not write if rom area
+                    if(address>=0x8000){
+                        this.bigmemory[address] = value;
+                    }
+                break;
             }
 
         }else{
-            this.bigmemory[address] = value;
+            let vramchecker = true;
+            if(this.ppuinfo.mode===2||this.ppuinfo.mode===3){
+                if(address>=0xFE00&&address<=0xFE9F) vramchecker = false;
+            }
+            if(this.ppuinfo.mode===3&&address>=0x8000&&address<=0x9FFF) vramchecker = false;
+
+            
+            
             if(address>=0xE000&&address<=0xFDFF){
                 
                 this.bigmemory[address-0x2000] = value;
@@ -72,8 +94,20 @@ export class gabememory{
             }
             if(address>=0xFF00&&address<=0xFF7F){
                 switch(address){
+                    case 0xFF02:
+                        if(value===0x81) console.log(String.fromCharCode(this.bigmemory[0xFF01]));
+                    break;
                     case 0xFF04:
                         this.bigmemory[address] = 0;
+                        this.vramchecker = false;
+                    break;
+                    case 0xFF41:
+                        this.bigmemory[address] = (this.bigmemory[address]&3)|(value&0xFC);
+                        this.vramchecker = false;
+                    break;
+                    case 0xFF44:
+                       
+                        this.vramchecker = false;
                     break;
                     case 0xFF46:
                         this.bigmemory[address] = value;
@@ -81,23 +115,25 @@ export class gabememory{
                     break;
                     case 0xFF50:
                         if(value){
-
+                            if(this.rom!=null){
                             for(let i=0;i<0x100;i++){
                                 this.bigmemory[i] = this.rom[i];
 
                             }
+                            }
+
                             
                         }
 
                     break;
 
                     default:
-                        this.bigmemory[address] = value;
+                        
 
                     break;
                 }
             }
-            
+            if(vramchecker) this.bigmemory[address] = value;
 
         }
 
@@ -150,6 +186,8 @@ export class gabememory{
             //console.log(this.bigmemory[i].toString(16));
         }
         
+
+
 
     }
     

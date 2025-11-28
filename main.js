@@ -29,7 +29,13 @@ ctx.fillStyle = "rgb(0, 0, 0)"
 ctx.fillRect(0, 0, 480, 432);
 ppu.canvas = ctx;
 }
-
+var canvas2 = document.getElementById("DEBUGPPUBACKGROUND");
+if (canvas2.getContext) {
+var ctx2 = canvas2.getContext("2d"); 
+ctx2.fillStyle = "rgb(0, 0, 0)"
+ctx2.fillRect(0, 0, 256, 256);
+ppu.debugbackcanvas = ctx2;
+}
 
 
 function updateinput(){
@@ -50,6 +56,7 @@ function updateinput(){
 
 
 function reset(){
+    //console.log(cpu.fstring);
     running = false;
     document.getElementById("pausedtxt").textContent = "현재 정지 중";
     clockhz = 4194304;
@@ -95,21 +102,16 @@ function runLoop(now) {
 
   if (accTimer >= msPerTimer) {
         debuggers.showall();
-        
-       //console.log(ppu.getly());
-      // console.log(ppu.curx);
+        ppu.showscreen();
+        //console.log(memory.readByte(0xFF40).toString(2));
        
-        //console.log(cpu.IME);
-        //console.log(cpu.ishalted);
-        //console.log(cpu.stopped);
-        //console.log(cpu.checkbtn());
-        //console.log(memory.PPUreadByte(0xFF40)&0x80);
     accTimer -= msPerTimer;
   }  
   while (accTime >= msPerTick) {
     tcycle++;
     if(tcycle%4===0)cpu.cyclerun();
     ppu.cyclerun();
+    
     if(tcycle==Number.MAX_SAFE_INTEGER) tcycle = 0;
     accTime -= msPerTick;
   }
@@ -128,19 +130,24 @@ document.getElementById("EmuRun").addEventListener("click",async function(){
     accTimer = 0;
     requestAnimationFrame(runLoop);
 });
-
-document.getElementById("EmuPause").addEventListener("click",function(){
+function pausezzz(){
     document.getElementById("pausedtxt").textContent = "현재 정지 중";
     running = false;
     debuggers.showall();
-});
+    
+
+}
+document.getElementById("EmuPause").addEventListener("click",pausezzz);
+
+window.onblur = pausezzz;
+
 document.getElementById("EmuStep").addEventListener("click",function(){
 
 
     if (!running){
         for(let i=0;i<4;i++)ppu.cyclerun();
         cpu.cyclerun();
-        ppu.showscreen(ctx);
+        ppu.showscreen();
         debuggers.showall();
     } 
 

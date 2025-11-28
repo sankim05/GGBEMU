@@ -23,10 +23,11 @@ export class GABECPU{
         this.IME = false;
         this.stopped = false;
         this.ishalted = false;
-        this.haltfail = false;
+        this.haltfail = false;  
         this.currentinterrupt = 0;
         this.mcycle = 0;
-
+        this.imeski = 0;
+       // this.fstring = "A:01 F:b0 B:00 C:13 D:00 E:d8 H:01 L:4d SP:fffe PC:0100 PCMEM:00,c3,13,02";
     }
     get AF(){
         return (this.registers.A << 8) | (this.registers.F);
@@ -85,7 +86,7 @@ export class GABECPU{
         this.AF = 0x0000;
         this.BC = 0x0000;
         this.DE = 0x0000;
-        this.HL = 0x0000;
+        this.HL = 0x000D;
 
         this.PC = 0x0000;
         this.SP = 0xFFFE;
@@ -95,7 +96,7 @@ export class GABECPU{
         this.haltfail = false;
         this.currentinterrupt = 0;
         this.mcycle = 0;
-
+        this.imeski = 0;
         this.extracycle = 0; // actually wait until it hits and reset to 0 when finished instruction
       
     }
@@ -186,12 +187,13 @@ export class GABECPU{
     cyclerun(){ //save individual flags when uhh weird stuff yea
         // DO SEPARATE CLOCK ACT WHEN MESSING WITH MEMORY(for ppu's)
         // especially when writing
+        if(this.extracycle>=6) this.extracycle = 0;
         this.mcycle++;
         if(this.mcycle==Number.MAX_SAFE_INTEGER) this.mcycle = 0;
         if(this.stopped){
             if(this.checkbtn()){
                 this.stopped = false;
-
+                this.extracycle = 0;
             }else return; 
            
         }
@@ -234,6 +236,7 @@ export class GABECPU{
                 
                 if(this.IME){
                     this.ishalted = false;
+                    this.extracycle = 0;
                     let bos = 0;
                     for(let i=1;i<=0x10;i = i<<1){
                         if(this.checkinterrupt()&i){
@@ -242,10 +245,11 @@ export class GABECPU{
                         }
                     }
                     this.currentinterrupt = bos;
-                    
+                    //console.log(bos);
                     
                 }else{
                     this.ishalted = false;
+                    this.extracycle = 0;
                 }
             }else{
                 return;
@@ -260,7 +264,7 @@ export class GABECPU{
 
                 if(this.extracycle===5){
                     this.IME = false;
-                    this.memory.writeByte(0xFF0F,this.memory.readByte(0xFF0F) & (~this.currentinterrupt));
+                    this.memory.writeByte(0xFF0F,this.memory.readByte(0xFF0F) & ((~this.currentinterrupt)&0xFF));
                     this.PC = interruptjumptable[this.currentinterrupt];
                     this.currentinterrupt = 0;
                     this.extracycle = 0;
@@ -281,7 +285,8 @@ export class GABECPU{
                         }
                     }
                     this.currentinterrupt = bos;
-                    //console.log(bos);
+                   // console.log(bos);
+                   this.extracycle = 0;
                 return;
             }
         }
@@ -685,7 +690,7 @@ export class GABECPU{
                                 if(this.CFLAG) adj+= 0x60;
                                 
                                 //if(this.registers.A<adj) this.CFLAG = 1;
-                                this.registers.A = (this.registers.A-adj)&0xFFFF;
+                                this.registers.A = (this.registers.A-adj)&0xFF;
                             }else{
                                 if(this.HFLAG||(this.registers.A&0xF)>0x9) adj+= 0x6;
                                 if(this.CFLAG||this.registers.A>0x99){
@@ -694,12 +699,12 @@ export class GABECPU{
                                 }
                                 this.registers.A+=adj;
                                 if(this.registers.A>0xFF){
-                                    this.registers.A = this.registers.A&0xFFFF;
+                                    this.registers.A = this.registers.A&0xFF;
                                     //this.CFLAG = 1;
                                 }
                             }
                             if(this.registers.A===0) this.ZFLAG = 1;
-                            
+                            else this.ZFLAG = 0;
                             this.HFLAG = 0;
 
                             this.extracycle = 0;
@@ -779,7 +784,7 @@ export class GABECPU{
                             this.NFLAG = 1;
                             this.HFLAG = 1;
   
-                            this.registers.A = ~this.registers.A&0xFF;
+                            this.registers.A = (~this.registers.A)&0xFF;
                         
                             this.PC++;
                         }
@@ -2999,8 +3004,8 @@ export class GABECPU{
                                             this.NFLAG = 0;
                                             this.HFLAG = 0;
                                             this.CFLAG = 0;
-                                            this.registers.L = ((this.registers.L <<4)&0xF0)|(this.registers.L >>4);
-                                            if(this.registers.L===0) this.ZFLAG = 1;
+                                            this.registers.A = ((this.registers.A <<4)&0xF0)|(this.registers.A >>4);
+                                            if(this.registers.A===0) this.ZFLAG = 1;
                                             else this.ZFLAG = 0;
                                             this.extracycle = 0;
                                             this.PC+=2;
@@ -3773,7 +3778,7 @@ export class GABECPU{
                                     break;
                                     case 0x01://RES 0, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C & 0b11111110;
+                                            this.registers.C = this.registers.C & 0b11111110;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -3808,7 +3813,7 @@ export class GABECPU{
                                     break;
                                     case 0x06://RES 0, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b11111110));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)& 0b11111110));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -3829,7 +3834,7 @@ export class GABECPU{
                                     break;
                                     case 0x09://RES 1, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C & 0b11111101;
+                                            this.registers.C = this.registers.C & 0b11111101;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -3864,7 +3869,7 @@ export class GABECPU{
                                     break;
                                     case 0x0E://RES 1, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b11111101));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)& 0b11111101));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -3889,7 +3894,7 @@ export class GABECPU{
                                     break;
                                     case 0x01://RES 2, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C & 0b11111011;
+                                            this.registers.C = this.registers.C & 0b11111011;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -3924,7 +3929,7 @@ export class GABECPU{
                                     break;
                                     case 0x06://RES 2, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b11111011));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)& 0b11111011));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -3945,7 +3950,7 @@ export class GABECPU{
                                     break;
                                     case 0x09://RES 3, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C & 0b11110111;
+                                            this.registers.C = this.registers.C & 0b11110111;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -3980,7 +3985,7 @@ export class GABECPU{
                                     break;
                                     case 0x0E://RES 3, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b11110111));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)& 0b11110111));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4005,7 +4010,7 @@ export class GABECPU{
                                     break;
                                     case 0x01://RES 4, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C & 0b11101111;
+                                            this.registers.C = this.registers.C & 0b11101111;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4040,7 +4045,7 @@ export class GABECPU{
                                     break;
                                     case 0x06://RES 4, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b11101111));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)& 0b11101111));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4061,7 +4066,7 @@ export class GABECPU{
                                     break;
                                     case 0x09://RES 5, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C & 0b11011111;
+                                            this.registers.C = this.registers.C & 0b11011111;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4096,7 +4101,7 @@ export class GABECPU{
                                     break;
                                     case 0x0E://RES 5, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b11011111));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)& 0b11011111));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4121,7 +4126,7 @@ export class GABECPU{
                                     break;
                                     case 0x01://RES 6, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C & 0b10111111;
+                                            this.registers.C = this.registers.C & 0b10111111;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4156,7 +4161,7 @@ export class GABECPU{
                                     break;
                                     case 0x06://RES 6, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b10111111));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)& 0b10111111));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4177,7 +4182,7 @@ export class GABECPU{
                                     break;
                                     case 0x09://RES 7, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C & 0b01111111;
+                                            this.registers.C = this.registers.C & 0b01111111;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4212,7 +4217,7 @@ export class GABECPU{
                                     break;
                                     case 0x0E://RES 7, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)& 0b01111111));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)& 0b01111111));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4237,7 +4242,7 @@ export class GABECPU{
                                     break;
                                     case 0x01://SET 0, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C | 0b00000001;
+                                            this.registers.C = this.registers.C | 0b00000001;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4272,7 +4277,7 @@ export class GABECPU{
                                     break;
                                     case 0x06://SET 0, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b00000001));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)| 0b00000001));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4293,7 +4298,7 @@ export class GABECPU{
                                     break;
                                     case 0x09://SET 1, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C | 0b00000010;
+                                            this.registers.C = this.registers.C | 0b00000010;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4328,7 +4333,7 @@ export class GABECPU{
                                     break;
                                     case 0x0E://SET 1, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b00000010));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)| 0b00000010));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4353,7 +4358,7 @@ export class GABECPU{
                                     break;
                                     case 0x01://SET 2, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C | 0b00000100;
+                                            this.registers.C = this.registers.C | 0b00000100;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4388,7 +4393,7 @@ export class GABECPU{
                                     break;
                                     case 0x06://SET 2, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b00000100));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)| 0b00000100));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4409,7 +4414,7 @@ export class GABECPU{
                                     break;
                                     case 0x09://SET 3, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C | 0b00001000;
+                                            this.registers.C = this.registers.C | 0b00001000;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4444,7 +4449,7 @@ export class GABECPU{
                                     break;
                                     case 0x0E://SET 3, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b00001000));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)| 0b00001000));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4469,7 +4474,7 @@ export class GABECPU{
                                     break;
                                     case 0x01://SET 4, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C | 0b00010000;
+                                            this.registers.C = this.registers.C | 0b00010000;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4504,7 +4509,7 @@ export class GABECPU{
                                     break;
                                     case 0x06://SET 4, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b00010000));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)| 0b00010000));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4525,7 +4530,7 @@ export class GABECPU{
                                     break;
                                     case 0x09://SET 5, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C | 0b00100000;
+                                            this.registers.C = this.registers.C | 0b00100000;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4560,7 +4565,7 @@ export class GABECPU{
                                     break;
                                     case 0x0E://SET 5, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b00100000));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)| 0b00100000));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4585,7 +4590,7 @@ export class GABECPU{
                                     break;
                                     case 0x01://SET 6, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C | 0b01000000;
+                                            this.registers.C = this.registers.C | 0b01000000;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4620,7 +4625,7 @@ export class GABECPU{
                                     break;
                                     case 0x06://SET 6, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b01000000));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)| 0b01000000));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4641,7 +4646,7 @@ export class GABECPU{
                                     break;
                                     case 0x09://SET 7, C
                                         if(this.extracycle===2){
-                                            this.registers.B = this.registers.C | 0b10000000;
+                                            this.registers.C = this.registers.C | 0b10000000;
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -4676,7 +4681,7 @@ export class GABECPU{
                                     break;
                                     case 0x0E://SET 7, [HL]
                                         if(this.extracycle===4){
-                                            this.memory.writeByte((this.memory.readByte(this.HL)| 0b10000000));
+                                            this.memory.writeByte(this.HL,(this.memory.readByte(this.HL)| 0b10000000));
                                             this.extracycle = 0;
                                             this.PC+=2;
                                         }           
@@ -5065,7 +5070,7 @@ export class GABECPU{
                             this.NFLAG = 0;
                             const pos = ((128 + byte2)&255)-128;
 
-                                if(pos>0){
+                               
                                 if(((pos&0xF)+(this.SP&0xF))>0xF){ 
                                     this.HFLAG = 1;
                                 }else{
@@ -5077,19 +5082,9 @@ export class GABECPU{
                                     this.CFLAG = 0;
                                 }
 
-                                }else{
-                                if(((this.SP&0xF)-((-pos)&0xF))<0){ 
-                                    this.HFLAG = 1;
-                                }else{
-                                    this.HFLAG = 0;
-                                }
-                                if(((this.SP&0xFF)+pos)<0){ 
-                                    this.CFLAG = 1;
-                                }else{
-                                    this.CFLAG = 0;
-                                }                                    
-                                }
-                            this.SP += pos;                               
+                                                        
+                                
+                            this.SP = (this.SP+pos)&0xFFFF;                               
                             this.extracycle = 0;
                             this.PC+=2;
                         }    
@@ -5171,7 +5166,7 @@ export class GABECPU{
                     case 0x00: // LDH A,[a8]
                         if(this.extracycle===3){
 
-                            this.registers.A = this.memory.readByte((0xFF00|byte2));
+                            this.registers.A = this.memory.readByte(0xFF00|byte2);
                             this.extracycle = 0;
                             this.PC+=2;
                         }               
@@ -5201,6 +5196,7 @@ export class GABECPU{
                     case 0x03: // DI          
                         if(this.extracycle===1){
                             this.IME = false;
+                            this.imeski = 0;
                             this.extracycle = 0;
                             this.PC++;
                         }          
@@ -5262,35 +5258,23 @@ export class GABECPU{
                             
                              this.ZFLAG = 0;
                             this.NFLAG = 0;
-                            const pos = ((128 + byte2)&255)-128;
-                                if(pos>0){
-                                if(((pos&0xF)+(this.SP&0xF))>0xF){ 
-                                    this.HFLAG = 1;
-                                }else{
-                                    this.HFLAG = 0;
-                                }
-                                if(((pos&0xFF)+(this.SP&0xFF))>0xFF){ 
-                                    this.CFLAG = 1;
-                                }else{
-                                    this.CFLAG = 0;
-                                }
-
-                                }else{
-                                if(((this.SP&0xF)-((-pos)&0xF))<0){ 
-                                    this.HFLAG = 1;
-                                }else{
-                                    this.HFLAG = 0;
-                                }
-                                if(((this.SP&0xFF)+pos)<0){ 
-                                    this.CFLAG = 1;
-                                }else{
-                                    this.CFLAG = 0;
-                                }                                    
-                                }
-
-                            const pos2 = this.SP+pos;
                             
-                            this.HL = pos2;                                    
+                                const pos = ((128 + byte2)&255)-128;
+                                if(((byte2&0xF)+(this.SP&0xF))>0xF){ 
+                                    this.HFLAG = 1;
+                                }else{
+                                    this.HFLAG = 0;
+                                }
+                                if(((byte2&0xFF)+(this.SP&0xFF))>0xFF){ 
+                                    this.CFLAG = 1;
+                                }else{
+                                    this.CFLAG = 0;
+                                }
+
+
+                            
+                            
+                            this.HL = (this.SP+pos)&0xFFFF;                                    
                             this.extracycle = 0;
                             this.PC+=2;
                         }    
@@ -5319,7 +5303,7 @@ export class GABECPU{
                     break; 
                     case 0x0B: // EI             
                         if(this.extracycle===1){
-                            this.IME = true;
+                            this.imeski = 1;
                             this.extracycle = 0;
                             this.PC++;
                         }     
@@ -5365,7 +5349,12 @@ export class GABECPU{
 
                 break;                                                          
         }
-
+        if(this.imeski) this.imeski++;
+        if(this.imeski===3){
+            this.imeski = 0;
+            this.IME = true;
+        }
+        //if(this.extracycle===0) this.fstring += "\nA:" + this.registers.A.toString(16).padStart(2,'0')+ " F:" + this.registers.F.toString(16).padStart(2,'0')+ " B:" + this.registers.B.toString(16).padStart(2,'0') + " C:" + this.registers.C.toString(16).padStart(2,'0')+ " D:" + this.registers.D.toString(16).padStart(2,'0')+ " E:" + this.registers.E.toString(16).padStart(2,'0') + " H:" + this.registers.H.toString(16).padStart(2,'0') + " L:" + this.registers.L.toString(16).padStart(2,'0') + " SP:" + this.SP.toString(16).padStart(4,'0') + " PC:" + this.PC.toString(16).padStart(4,'0') + " PCMEM:" + this.memory.PPUreadByte(this.PC).toString(16).padStart(2,'0') + "," + this.memory.PPUreadByte(this.PC+1).toString(16).padStart(2,'0') + "," + this.memory.PPUreadByte(this.PC+2).toString(16).padStart(2,'0') + "," + this.memory.PPUreadByte(this.PC+3).toString(16).padStart(2,'0'); 
 
     }
 
