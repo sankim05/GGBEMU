@@ -24,6 +24,7 @@ export class GABEPPU{
         this.mode = 2;
         this.dotstorage = new Uint8Array(144*160).fill(0);
         this.curx = 0;
+        this.petx = 0;
         this.wiy = -1;
         this.m3p = 0;
         this.windowing = false;
@@ -74,6 +75,7 @@ export class GABEPPU{
         this.wiy = -1;
         this.wytrigger = false;
         this.curx = 0;
+        this.petx = 0;
         this.m3p = 0;
         this.windowing = false;
         this.temptileid = 0;
@@ -206,6 +208,7 @@ export class GABEPPU{
                         if(this.extracycle===1){//oam scan
                             
                             this.SCXWP = this.memory.PPUreadByte(0xFF43)&7;
+                            
                             this.oamarray = [];
                             
                             let oamiterator = 0xFE00;
@@ -281,11 +284,11 @@ export class GABEPPU{
                                     }else{
                                         const aby = (this.getly() + this.memory.PPUreadByte(0xFF42))&0xFF;
                                         
-                                        const abx = ((this.curx>>3) + ((this.memory.PPUreadByte(0xFF43)+8)>>3))&0x1F;
+                                        const abx = (this.petx + this.memory.PPUreadByte(0xFF43))&0xFF;
                                         
                                         
-                                        if(LCDC&64) this.temptileid = this.memory.PPUreadByte(0x9C00+((aby>>3)<<5)+abx); 
-                                        else this.temptileid = this.memory.PPUreadByte(0x9800+((aby>>3)<<5)+abx); 
+                                        if(LCDC&64) this.temptileid = this.memory.PPUreadByte(0x9C00+((aby>>3)<<5)+(abx>>3)); 
+                                        else this.temptileid = this.memory.PPUreadByte(0x9800+((aby>>3)<<5)+(abx>>3)); 
                                         
                          
                                         
@@ -332,6 +335,7 @@ export class GABEPPU{
                                                     this.pixelbuffer.size++;
                                                     if(this.pixelbuffer.tail===16) this.pixelbuffer.tail = 0;
                                                 }
+                                                this.petx+=8;
                                             this.gagocycle = 0;
                                         }else{
                                             this.gagocycle--;
@@ -482,6 +486,7 @@ export class GABEPPU{
                     this.memory.PPUwriteByte(0xFF0F,this.memory.PPUreadByte(0xFF0F)|1);
                 }else if(this.getly()===0) this.mode = 2;
                 this.curx = 0;
+                this.petx = 0;
                 this.m3p = 0;
                 this.gagocycle = 0;
                 this.lasttileforoam = -1;      
