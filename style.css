@@ -48,7 +48,13 @@
   .longbtn{
     color : black;
   }
+  #DEBUGOPENbtn{
+    color : black;
+  }
+  #DEBUGPANEL{
+   display : none;
 
+  }
   #bigButtons {
     display: grid;
     float: left;
@@ -106,4 +112,20 @@
     justify-content: center;
     gap: 30px;
     margin-top: 20px;
+}
+.Supercontainer {
+  margin: 1%;
+  
+  display :inline-block;
+}
+
+#bigbigcontainer {
+  display :flex;
+
+}
+
+.RAMSHOW {
+  border-color: chartreuse;
+  border-style: solid;
+
 }

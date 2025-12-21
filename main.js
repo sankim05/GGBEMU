@@ -8,6 +8,7 @@ let lastTime = 0;
 let accTime  = 0; 
 let accTimer = 0;
 let tcycle = 0;
+let debugging = false;
 const msPerTimer = 1000/60;
 let uploadedfile = null;
 const reader = new FileReader();
@@ -35,6 +36,14 @@ var ctx2 = canvas2.getContext("2d");
 ctx2.fillStyle = "rgb(0, 0, 0)"
 ctx2.fillRect(0, 0, 256, 256);
 ppu.debugbackcanvas = ctx2;
+}
+var canvas3 = document.getElementById("DEBUGPPUWINDOW");
+if (canvas3.getContext) {
+var ctx3 = canvas3.getContext("2d"); 
+ctx3.fillStyle = "rgb(0, 0, 0)"
+ctx3.fillRect(0, 0, 256, 256);
+
+ppu.debugwincanvas = ctx3;
 }
 
 
@@ -168,7 +177,14 @@ document.getElementById("Speedup").addEventListener("click",function(){
     else document.getElementById("Speedshow").textContent = clockhz + "hz";
 
 });
-
+document.getElementById("DEBUGOPENbtn").addEventListener("click",function(){
+    debugging = !debugging;
+    if(debugging){
+        document.getElementById("DEBUGPANEL").style.display = "block";
+    }else{
+        document.getElementById("DEBUGPANEL").style.display = "none";
+    }
+});
 
 document.getElementById("userUpload").addEventListener('change',function(event){
     if(event.target.files.length > 0){

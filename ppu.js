@@ -18,6 +18,7 @@ export class GABEPPU{
     constructor(memory){
         this.memory = memory;
         this.debugbackcanvas = null;
+        this.debugwincanvas = null;
         this.canvas = null;
         this.extracycle = 0;
         this.turnedoff = false;

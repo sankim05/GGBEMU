@@ -17,7 +17,8 @@
 
 <h1>가베(GABE) Game Boy 에뮬레이터</h1>
 <hr>
-<div>
+<div id="bigbigcontainer">
+<div class = "Supercontainer">
 <canvas id="Display" width="480" height="432"></canvas>
 <div id = "SPEEDSTER">
 <button type="button" class = "inliner bottonsxd" id = "Speeddown"> &lt; </button>
@@ -69,15 +70,45 @@
 
 
 </div>
-<canvas id="DEBUGPPUBACKGROUND" width="256" height="256"></canvas>
-<span id="DEBUG">
+<div class = "Supercontainer">
+<button id = "DEBUGOPENbtn">디버그</button>
 
+<br>
+<br>
 
-    DEBUG
+<div id = "DEBUGPANEL">
+메모리
+<br>
 
+<div id = "RAMSHOW1" class = "RAMSHOW">
     
-</span>
+    <div id="ramcopy" class = "ramcopyz">
+        0000
+        <span>
+            00
+        </span>
+    </div>
+    
+</div>
+<div id = "RAMSHOW2" class = "RAMSHOW">
+    
+</div>
+<div>
+백그라운드
+<canvas id="DEBUGPPUBACKGROUND" width="256" height="256"></canvas>
+윈도우
+<canvas id="DEBUGPPUWINDOW" width="256" height="256"></canvas>
 
+</div>
+
+
+
+
+
+</div>
+</div>
+
+</div>
 </body>
 
 
