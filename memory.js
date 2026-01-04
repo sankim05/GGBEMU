@@ -19,11 +19,13 @@ export class gabememory{
         this.rom = null; // big very
         //0x0100-014F cartridge header 80B
 
-        this.OAMtransfercycle = 0;
+       this.OAMtransfercycle = 0;
+
         this.bigmemory = new Uint8Array(0x10000);
         this.cartridgetype = 0;
         this.bankingmode = 0;
         this.ppuinfo = null;
+        this.joypad = null;
     }
     incrementdiv(){
         this.bigmemory[0xFF04]++;
@@ -43,13 +45,15 @@ export class gabememory{
 
     
     readByte(address){
-        
+      
+            if(address==0xFF00) this.bigmemory[address] = (this.joypad.getsgn() & 0x0F) | (this.bigmemory[address] & 0x30);
+            
             let vramchecker = true;
             if(this.ppuinfo.mode===2||this.ppuinfo.mode===3){
                 if(address>=0xFE00&&address<=0xFE9F) vramchecker = false;
             }
             if(this.ppuinfo.mode==3&&address>=0x8000&&address<=0x9FFF) vramchecker = false;
-
+            
             
             if(!vramchecker) return 0xFF;        
         return this.bigmemory[address];
@@ -91,11 +95,14 @@ export class gabememory{
             if(address>=0xC000&&address<=0xDDFF){
                 
                 this.bigmemory[address+0x2000] = value;
+               
             }
             if(address>=0xFF00&&address<=0xFF7F){
                 switch(address){
-                    case 0xFF02:
-                        if(value===0x81) console.log(String.fromCharCode(this.bigmemory[0xFF01]));
+                    case 0xFF00:
+                        
+                        this.bigmemory[address] = (this.joypad.getsgn() | 0x0F) | (value & 0x30);
+                        this.vramchecker = false;
                     break;
                     case 0xFF04:
                         this.bigmemory[address] = 0;
@@ -134,6 +141,7 @@ export class gabememory{
                 }
             }
             if(vramchecker) this.bigmemory[address] = value;
+       
 
         }
 

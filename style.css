@@ -124,8 +124,53 @@
 
 }
 
+#bigramshower{
+  display:inline-block;
+  font-family:monospace;
+  font-size: large;
+}
+
 .RAMSHOW {
-  border-color: chartreuse;
+  border-color:slategray;
   border-style: solid;
+  border-width: 3px;
+  
+}
+.ramcopyz * {
+  border-color: dimgray;
+  border-style: solid;
+  border-width: 1px;
+}
+.ramshowval{
+background-color: black;
+
+}
+.ramshow1idx{
+  background-color:indigo;
+}
+.ramshow2idx{
+  background-color: darkmagenta;
+}
+.blocker {
+  display:inline-block;
+
+}
+#RegiPCshow .ramshowidx{
+ background-color: fuchsia;
+}
+#RegiSPshow .ramshowidx{
+ background-color: green;
+}
+.ramcopyz .ramshowidx{
+background-color: dodgerblue;
+
+}
+#Flagshow .ramshowidx{
+background-color: chocolate;
+
+}
+
+#RAMPOKETEXTBOX{
+  color: black;
 
 }

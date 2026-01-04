@@ -78,21 +78,198 @@
 
 <div id = "DEBUGPANEL">
 메모리
-<br>
 
-<div id = "RAMSHOW1" class = "RAMSHOW">
+<input type="text" id = "RAMPOKETEXTBOX">
+
+</input>
+<span id="Debugstringoutput">
+    SEEING : 0000 EXECUTING : NOP
+</span>
+
+<br>
+<div id = bigramshower>
+<div id="ramshower1" class = "RAMSHOW blocker">
     
     <div id="ramcopy" class = "ramcopyz">
-        0000
-        <span>
+        <span class = "ramshow1idx">
+            0000
+        </span>
+        
+        <span class = "ramshowval">
             00
         </span>
     </div>
     
 </div>
-<div id = "RAMSHOW2" class = "RAMSHOW">
-    
+<div id="ramshower2copy" class = "RAMSHOW blocker">
+    <div id="ramcopy2" class = "ramcopyz rs2c">
+        <span class = "ramshow2idx">
+            0000
+        </span>
+        
+        <span class = "ramshowval">
+            00
+        </span>
+    </div>
 </div>
+
+
+<div class = "RAMSHOW blocker">
+    <div id = "RegiAshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            A
+        </span>
+        
+        <span class = "ramshowval">
+            00
+        </span>
+        
+    </div>
+     <div id = "RegiBshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            B
+        </span>
+        
+        <span class = "ramshowval">
+            00
+        </span>
+        
+    </div>
+    <div id = "RegiDshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            D
+        </span>
+        
+        <span class = "ramshowval">
+            00
+        </span>
+        
+    </div>
+     <div id = "RegiHshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            H
+        </span>
+        
+        <span class = "ramshowval">
+            00
+        </span>
+        
+    </div>       
+</div>
+
+<div class = "RAMSHOW blocker">
+    <div id = "RegiFshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            F
+        </span>
+        
+        <span class = "ramshowval">
+            00
+        </span>
+        
+    </div>
+     <div id = "RegiCshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            C
+        </span>
+        
+        <span class = "ramshowval">
+            00
+        </span>
+        
+    </div>
+    <div id = "RegiEshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            E
+        </span>
+        
+        <span class = "ramshowval">
+            00
+        </span>
+        
+    </div>
+     <div id = "RegiLshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            L
+        </span>
+        
+        <span class = "ramshowval">
+            00
+        </span>
+        
+    </div>       
+</div>
+<div class = "RAMSHOW blocker">
+     <div id = "RegiPCshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            PC
+        </span>
+        
+        <span class = "ramshowval">
+            0000
+        </span>
+        
+    </div>     
+     <div id = "RegiSPshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            SP
+        </span>
+        
+        <span class = "ramshowval">
+            0000
+        </span>
+        
+    </div>     
+</div>
+
+<div id = "Flagshow" class = "RAMSHOW blocker">
+     <div id = "FlagZshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            Z
+        </span>
+        
+        <span class = "ramshowval">
+            0
+        </span>
+        
+    </div>     
+     <div id = "FlagNshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            N
+        </span>
+        
+        <span class = "ramshowval">
+            0
+        </span>
+        
+    </div>
+     <div id = "FlagHshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            H
+        </span>
+        
+        <span class = "ramshowval">
+            0
+        </span>
+        
+    </div>     
+     <div id = "FlagCshow" class = "ramcopyz">
+        <span class = "ramshowidx">
+            C
+        </span>
+        
+        <span class = "ramshowval">
+            0
+        </span>
+        
+    </div>                 
+</div>
+
+
+</div>
+<br>
+<br>
+
 <div>
 백그라운드
 <canvas id="DEBUGPPUBACKGROUND" width="256" height="256"></canvas>
