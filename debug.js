@@ -543,8 +543,11 @@ export class GABEdebugger{
             let pcnum = this.CPU.PC+idx1;
 
             if(pcnum>=0&&pcnum<=0xFFFF){
+
                 item.querySelector(".ramshow1idx").textContent = pcnum.toString(16).toUpperCase().padStart(4,'0') + " ";
-                item.querySelector(".ramshowval").textContent = this.memory.PPUreadByte(pcnum).toString(16).toUpperCase().padStart(2,'0');
+                if(pcnum<0xC000) item.querySelector(".ramshowval").textContent = this.memory.readByte(pcnum).toString(16).toUpperCase().padStart(2,'0');
+                else item.querySelector(".ramshowval").textContent = this.memory.PPUreadByte(pcnum).toString(16).toUpperCase().padStart(2,'0');
+            
             }else{
                 item.querySelector(".ramshow1idx").textContent = "";
                 item.querySelector(".ramshowval").textContent = "";
@@ -576,7 +579,7 @@ export class GABEdebugger{
         const readbyte = this.memory.PPUreadByte(this.CPU.PC);
         if(readbyte==0xCB) addstring = prefixtable[readbyte];
         else addstring = insttable[readbyte];
-        document.getElementById("Debugstringoutput").textContent = textthing + addstring;
+        document.getElementById("Debugstringoutput").textContent = textthing + addstring + " HALTED : " + this.CPU.ishalted;
     }
     showall(){
         document.getElementById("RegiAshow").querySelector(".ramshowval").textContent = this.CPU.registers.A.toString(16).toUpperCase().padStart(2,'0');

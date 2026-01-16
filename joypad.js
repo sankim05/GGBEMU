@@ -269,7 +269,7 @@ document.addEventListener("keyup",(event)=>{
             if(statusx&0x20){
                 btnmask = 0xF;
             }
-           
+          
             return ((this.btnbitsB&this.btnbitsK)|btnmask) & ((this.dpadbitsB&this.dpadbitsK)|dpadmask);
     }
 

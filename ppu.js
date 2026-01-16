@@ -7,10 +7,9 @@
 // rgb(183,137,203)
 
 function compareobject(a,b){
-    if((a&0x00FF0000)!==(b&0x00FF0000)){
+    
         return a&0x00FF0000 - b&0x00FF0000;
-    }
-   
+
 
 }
 
@@ -25,11 +24,12 @@ export class GABEPPU{
         this.mode = 2;
         this.dotstorage = new Uint8Array(144*160).fill(0);
         this.curx = 0;
+        this.wcurx = 0;
         this.petx = 0;
         this.wiy = -1;
         this.m3p = 0;
         this.windowing = false;
-   
+ 
         this.pixelbuffer = {
             dataz : new Uint8Array(16).fill(0),
             head : 0,
@@ -63,9 +63,10 @@ export class GABEPPU{
     reset(){
        
         this.extracycle = 0;
-        this.turnedoff = false;
+        this.turnedoff = true;
         this.mode = 2;
         this.memory.PPUwriteByte(0xFF44,0);
+        this.memory.PPUwriteByte(0xFF41,this.memory.PPUreadByte(0xFF41)&0xFC);
         this.dotstorage.fill(0);
         this.pixelbuffer.head = 0;
         this.pixelbuffer.tail = 0;
@@ -78,6 +79,7 @@ export class GABEPPU{
         this.wiy = -1;
         this.wytrigger = false;
         this.curx = 0;
+        this.wcurx = 0;
         this.petx = 0;
         this.m3p = 0;
         this.windowing = false;
@@ -293,6 +295,7 @@ export class GABEPPU{
                                     if(this.memory.PPUreadByte(oamiterator)>this.getly()+8&&this.memory.PPUreadByte(oamiterator)<=this.getly()+16){
                                         hit = true;
                                         guh = (this.memory.PPUreadByte(oamiterator+2) << 8);
+                                        
                                     }
                                 }
                                 if(hit){
@@ -352,8 +355,8 @@ export class GABEPPU{
                                     case 2:
 
                                     if(this.windowing){
-                                        const wix = ((this.curx-(this.memory.PPUreadByte(0xFF4B)-7))>>3)&0x1F;
-                                        
+                                        const wix = (this.wcurx>>3)&0x1F;
+                                        this.wcurx+=8;
                                         if(LCDC&64) this.temptileid = this.memory.PPUreadByte(0x9C00+((this.wiy>>3)<<5)+wix); 
                                         else this.temptileid = this.memory.PPUreadByte(0x9800+((this.wiy>>3)<<5)+wix);  
                                     }else{
@@ -436,10 +439,14 @@ export class GABEPPU{
                                     finpix = (this.memory.PPUreadByte(0xFF47)&(3<<(rawpix*2)))>>(rawpix*2);
                                     
                                 }
-                                
+                                let output = false;
                                 if(this.SCXWP>0){
                                     this.SCXWP--;
+                                    if(this.windowing){
+                                        output = true;
+                                    }
                                 }else{ // use object
+                                    output = true;
                                     if(this.objectbuffer.size>0){
                                         let objpix = this.objectbuffer.dataz[this.objectbuffer.head];
                                         
@@ -447,7 +454,7 @@ export class GABEPPU{
                                             let cpal = this.memory.PPUreadByte(0xFF48+((objpix&16)>>4)); // Not swearing!
                                             let truepix = (cpal & (3 << ((objpix&3)*2))) >> ((objpix&3)*2);
                                             
-                                            if(finpix==0 | objpix&128==0) finpix = truepix;
+                                            if((finpix==0) || ((objpix&128)==0)) finpix = truepix;
                                             
                                         }
                                         
@@ -458,6 +465,10 @@ export class GABEPPU{
                                         if(this.objectbuffer.head==16) this.objectbuffer.head = 0;
                                     }
                                 }
+
+
+
+                                if(output){
                                 this.pixelbuffer.size--;
                                 this.pixelbuffer.head++;
                                 if(this.pixelbuffer.head==16) this.pixelbuffer.head = 0;
@@ -465,6 +476,9 @@ export class GABEPPU{
                                 this.dotstorage[this.getly()*160+this.curx] = finpix; 
                                 
                                 this.curx++;
+
+                                }
+
                            }  
                         
 
@@ -472,10 +486,10 @@ export class GABEPPU{
                             const objectsprite = this.oamarray[this.oampointer];
                             
                             this.oampointer++;
-                            const objecty = this.getly() - ((objectsprite >>> 24) - 16);
+                            let objecty = this.getly() - ((objectsprite >>> 24) - 16);
                             let penaltyz = 6;
                             let temptileoams = ((this.curx + this.memory.PPUreadByte(0xFF43)))>>3;
-                            if(this.windowing) temptileoams = ((this.curx-(this.memory.PPUreadByte(0xFF4B)-7))>>3);
+                            if(this.windowing) temptileoams = this.wcurx>>3;
                             if(this.lasttileforoam!= temptileoams){
                                 penaltyz += 7 - this.SCXWP;
                                 if(7-this.SCXWP<0) penaltyz = 6;
@@ -502,15 +516,17 @@ export class GABEPPU{
                             if(objectflag&32){
                                 let res1 = 0;
                                 let res2 = 0;
-                                for(let i=7;i>=0;i--){
+                                for(let i=0;i<8;i++){
+                                    res1 = res1 << 1;
                                     res1 = res1 | (bytez1&1);
                                     bytez1 = bytez1 >> 1;
-                                    res1 = res1 << 1;
+                                    
                                 }
-                                for(let i=7;i>=0;i--){
+                                for(let i=0;i<8;i++){
+                                    res2 = res2 << 1;
                                     res2 = res2 | (bytez2&1);
                                     bytez2 = bytez2 >> 1;
-                                    res2 = res2 << 1;
+                                    
                                 }
                                 bytez1 = res1;
                                 bytez2 = res2;
@@ -558,22 +574,23 @@ export class GABEPPU{
             }else{
                 
                 this.reset();
-                
-                
+
                 
             }
             if(this.extracycle===456){
 
+                
                 this.incremently();
                 this.extracycle = 0;
                 if(this.getly()===144){
                     this.wiy = -1;
-                   
+
                     this.mode = 1;
                     this.wytrigger = false;
                     this.memory.PPUwriteByte(0xFF0F,this.memory.PPUreadByte(0xFF0F)|1);
                 }else if(this.getly()===0) this.mode = 2;
                 this.curx = 0;
+                this.wcurx = 0;
                 this.petx = 0;
                 this.m3p = 0;
                 this.gagocycle = 0;
@@ -589,7 +606,7 @@ export class GABEPPU{
                 
                 
             }
-
+            if(!this.turnedoff){
             let STATs = this.memory.PPUreadByte(0xFF41);
             //if(this.memory.PPUreadByte(0xFF45))console.log(this.getly() + " " + this.memory.PPUreadByte(0xFF45));
             
@@ -613,9 +630,13 @@ export class GABEPPU{
                 if(!this.gontrigger){
                     this.memory.PPUwriteByte(0xFF0F,this.memory.PPUreadByte(0xFF0F)|2);
                     this.gontrigger = true;
-
+              
                 } 
             }else this.gontrigger = false;
+
+
+            }
+
                 
 
             

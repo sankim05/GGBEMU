@@ -44,6 +44,7 @@ const cpu = new GABECPU(memory);
 const ppu = new GABEPPU(memory);
 const joypad = new GABEjoy(memory);
 memory.ppuinfo = ppu;
+
 memory.joypad = joypad;
 var canvas = document.getElementById("Display");
 if (canvas.getContext) {
@@ -118,7 +119,9 @@ function runLoop(now) {
   let msPerTick = 1000 / clockhz;
 
   if (accTimer >= msPerTimer) {
-    //console.log(ppu.mode);
+    
+    //console.log(memory.currentrombank + " " + memory.bankingmode);
+    //console.log(memory.PPUreadByte(0xFF00).toString(2));
     if(debugging){
         debuggers.showall();
         
@@ -132,9 +135,14 @@ ppu.showscreen();
   while (accTime >= msPerTick) {
     tcycle++;
     ppu.cyclerun();
-    if(tcycle%4===0)cpu.cyclerun();
     
-   // if(cpu.PC==0x150) console.log(cpu.PC.toString(16));
+    if(tcycle%4===0)cpu.cyclerun();
+    if(cpu.mcycle == 5224910){
+        debuggers.showall();
+        running = false;
+        break;
+    }
+    
     /*
     if(tcycle%456==0){
         if(ppu.getly()<144){

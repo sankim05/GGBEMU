@@ -20,21 +20,26 @@ export class gabememory{
         //0x0100-014F cartridge header 80B
 
        this.OAMtransfercycle = 0;
-
+        this.romsize = 0;
+        this.ramsize = 0;
         this.bigmemory = new Uint8Array(0x10000);
+        this.rambank = new Uint8Array(0x20000);
         this.cartridgetype = 0;
         this.bankingmode = 0;
+        this.currentrombank = 1;
         this.ppuinfo = null;
         this.joypad = null;
+        this.ramarea = 0;
+        this.extraramon = false;
+        this.rombankmasker = 0;
+        this.mbc = 0;
     }
     incrementdiv(){
         this.bigmemory[0xFF04]++;
         
     }
 
-    bankswitch(){
 
-    }
     PPUreadByte(address){
        
         return this.bigmemory[address&0xFFFF];
@@ -45,9 +50,12 @@ export class gabememory{
 
     
     readByte(address){
-      
-            if(address==0xFF00) this.bigmemory[address] = (this.joypad.getsgn() & 0x0F) | (this.bigmemory[address] & 0x30);
-            
+
+
+
+
+            if(address==0xFF00) this.bigmemory[address] = (this.joypad.getsgn() & 0x0F) | (this.bigmemory[address] & 0x30) | 0xC0;
+           
             let vramchecker = true;
             if(this.ppuinfo.mode===2||this.ppuinfo.mode===3){
                 if(address>=0xFE00&&address<=0xFE9F) vramchecker = false;
@@ -55,24 +63,112 @@ export class gabememory{
             if(this.ppuinfo.mode==3&&address>=0x8000&&address<=0x9FFF) vramchecker = false;
             
             
-            if(!vramchecker) return 0xFF;        
+            if(!vramchecker) return 0xFF;
+            
+            
+
+        if(address<0xC000){
+            switch(this.mbc){
+                case 0:
+                    return this.bigmemory[address];
+                
+                case 1: // make sure to use top banana when mode 1
+                    if(address>=0x4000&&address<=0x7FFF){
+                        return this.rom[(this.currentrombank*0x4000)+(address-0x4000)];
+                    }
+                    if(this.bankingmode===1){
+                        if(address>=0xA000){
+                            if(this.cartridgetype!==0x01){
+                            if(this.extraramon) return this.rambank[this.ramarea*0x2000+(address-0xA000)];
+                            else return 0xFF;
+
+                            } else return this.bigmemory[address];
+
+                        }else if(address<=0x3FFF){
+                            
+                            return this.rom[((this.currentrombank&0x60)*0x4000)+address];
+                        }
+                       
+                    }else{
+                        if(address>=0xA000&&this.cartridgetype!=0x01){
+                            if(this.extraramon) return this.rambank[this.ramarea*0x2000+(address-0xA000)];
+                            else return 0xFF;
+                        }
+                        else return this.bigmemory[address];
+
+                    }
+
+                    return this.bigmemory[address];
+                default:
+                    return this.bigmemory[address];
+
+                
+
+            }
+
+
+
+        }
+
         return this.bigmemory[address];
 
     }
     
     writeByte(address,value){
-
         if(address<0xC000){
-            switch(this.cartridgetype){
-                case 0x00:
+            switch(this.mbc){
+                case 0:
                     // does not write if rom area
                     if(address>=0x8000){
                         this.bigmemory[address] = value;
                         
                     }
                 break;
+                case 1:
+                 
+                    if(address>=0x8000){
+
+                        if(address>=0xA000&&this.cartridgetype!=0x01){
+                            if(this.extraramon) this.rambank[this.ramarea*0x2000+(address-0xA000)] = value;
+                        }
+                        else this.bigmemory[address] = value;
+                        
+                    }
+                    else if(address<=0x1FFF){
+                        if((value&0xF)==0xA){
+                            this.extraramon = true;
+                        }else{
+                            this.extraramon = false;
+                        }
+                    }
+                    else if(address<=0x3FFF){
+                        let banknum = value&0x1F;
+                        
+                        if(banknum===0){
+                            banknum = 1;
+                        }
+                        
+                        this.currentrombank = (this.currentrombank & 0x60) | (banknum&this.rombankmasker);
+                        
+                        
+                    }else if(address<=0x5FFF){
+                        if(this.rombankmasker>32){ // rom big
+                            this.currentrombank = (this.currentrombank & 0x1F) | ((value << 5)&this.rombankmasker);
+
+                        }else if(this.ramsize===3){
+                            this.rambank = value&3;
+                        }
+
+                    }else{ // 6000 ~ 7FFF ig
+                        this.bankingmode = value&1;
+
+                    }     
+
+                break;
+             
+
                 default:
-                    // does not write if rom area
+      
                     if(address>=0x8000){
                         this.bigmemory[address] = value;
                     }
@@ -101,7 +197,8 @@ export class gabememory{
                 switch(address){
                     case 0xFF00:
                         
-                        this.bigmemory[address] = (this.joypad.getsgn() | 0x0F) | (value & 0x30);
+                        this.bigmemory[address] = (this.joypad.getsgn() & 0x0F) | (value & 0x30) | 0xC0;
+                        
                         this.vramchecker = false;
                     break;
                     case 0xFF04:
@@ -119,6 +216,7 @@ export class gabememory{
                     case 0xFF46:
                         this.bigmemory[address] = value;
                         this.OAMtransfercycle = 1;
+                        
                     break;
                     case 0xFF50:
                         if(value){
@@ -154,8 +252,14 @@ export class gabememory{
         if(this.rom!=null){
         
         this.cartridgetype = this.rom[0x0147];
-        const romsize = this.rom[0x0148];
-        const ramsize = this.rom[0x0149];
+        this.romsize = this.rom[0x0148];
+        this.rombankmasker = 0;
+        for(let i=0;i<=this.romsize;i++){
+            this.rombankmasker = this.rombankmasker << 1;
+            this.rombankmasker = this.rombankmasker | 1;
+            
+        }
+        this.ramsize = this.rom[0x0149];
         switch(this.cartridgetype){
             case 0x00:
                 for(let i=0;i<0x8000;i++){
@@ -164,6 +268,30 @@ export class gabememory{
                 }
 
             break;
+            case 0x01:
+                this.mbc = 1;
+                for(let i=0;i<0x8000;i++){
+                    this.bigmemory[i] = this.rom[i];
+
+                }
+
+            break;                
+            case 0x02:
+                this.mbc = 1;
+                for(let i=0;i<0x8000;i++){
+                    this.bigmemory[i] = this.rom[i];
+
+                }
+
+            break;  
+            case 0x03:
+                this.mbc = 1;
+                for(let i=0;i<0x8000;i++){
+                    this.bigmemory[i] = this.rom[i];
+
+                }
+
+            break;              
             default:
                 for(let i=0;i<0x8000;i++){
                     this.bigmemory[i] = this.rom[i];
@@ -180,11 +308,19 @@ export class gabememory{
     }
     reset(){
         this.bigmemory.fill(0);
+        this.rambank.fill(0);
         this.bigmemory[0xFF00] = 0xFF;
         //this.bigmemory[0xFF40] = 0xFF;
         this.cartridgetype = 0;
         this.bankingmode = 0;
         this.OAMtransfercycle = 0;
+        this.ramarea = 0;
+        this.extraramon = false;
+        this.currentrombank = 1;
+        this.romsize = 0;
+        this.ramsize = 0;
+        this.mbc = 0;
+        this.rombankmasker = 0;
         if(this.rom!=null){
             this.loadrom();
         }
