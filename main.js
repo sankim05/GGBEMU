@@ -10,7 +10,7 @@ let accTime  = 0;
 let accTimer = 0;
 let tcycle = 0;
 let debugging = false;
-const msPerTimer = 1000/60;
+const msPerTimer = 1000/61;
 let uploadedfile = null;
 const reader = new FileReader();
   
@@ -119,14 +119,16 @@ function runLoop(now) {
   let msPerTick = 1000 / clockhz;
 
   if (accTimer >= msPerTimer) {
-    
-    //console.log(memory.currentrombank + " " + memory.bankingmode);
-    //console.log(memory.PPUreadByte(0xFF00).toString(2));
-    if(debugging){
+    ppu.showscreen();
+        if(debugging){
         debuggers.showall();
         
     }
-ppu.showscreen();
+
+    
+    //console.log(memory.currentrombank + " " + memory.bankingmode);
+    //console.log(memory.PPUreadByte(0xFF00).toString(2));
+
 
         
        
@@ -137,12 +139,7 @@ ppu.showscreen();
     ppu.cyclerun();
     
     if(tcycle%4===0)cpu.cyclerun();
-    if(cpu.mcycle == 5224910){
-        debuggers.showall();
-        running = false;
-        break;
-    }
-    
+
     /*
     if(tcycle%456==0){
         if(ppu.getly()<144){

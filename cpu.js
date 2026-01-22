@@ -274,7 +274,7 @@ export class GABECPU{
         
 
             if(this.memory.OAMtransfercycle){
-            this.memory.PPUwriteByte(0xFE00|(this.memory.OAMtransfercycle-1),this.memory.readByte((this.memory.PPUreadByte(0xFF46)<<8)|(this.memory.OAMtransfercycle-1)));
+            this.memory.PPUwriteByte(0xFE00|(this.memory.OAMtransfercycle-1),this.memory.PPUreadByte((this.memory.PPUreadByte(0xFF46)<<8)|(this.memory.OAMtransfercycle-1)));
             this.memory.OAMtransfercycle++;
             if(this.memory.OAMtransfercycle===161) this.memory.OAMtransfercycle = 0;
         }
@@ -309,7 +309,7 @@ export class GABECPU{
         if(this.haltfail){
             byte2 = byte1;
             byte3 = byte2;
-            //this.PC--;
+            
             this.haltfail = false;
         }
 

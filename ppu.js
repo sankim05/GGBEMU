@@ -6,12 +6,7 @@
 // rgb(155,89,182)
 // rgb(183,137,203)
 
-function compareobject(a,b){
-    
-        return a&0x00FF0000 - b&0x00FF0000;
 
-
-}
 
 export class GABEPPU{
     constructor(memory){
@@ -302,12 +297,22 @@ export class GABEPPU{
                                     const nums = (this.memory.PPUreadByte(oamiterator) << 24) | (this.memory.PPUreadByte(oamiterator+1) << 16) | guh | this.memory.PPUreadByte(oamiterator+3);
                                     
                                     this.oamarray.push(nums);
+                                    if(this.oamarray.length!=1){
+                                        
+                                    } 
                                     oamiterator+=4;
                                 }else{
                                     oamiterator+=4;
                                 }
                             }
-                            this.oamarray.sort(compareobject); //pray stablesort works
+                            this.oamarray.sort((a,b) => {
+                                const ax = (a&0x00FF0000) >> 16;
+                                const bx = (b&0x00FF0000) >> 16;
+                            return ax - bx;
+
+
+                            }); //pray stablesort works
+                            
                         }
                     }else if(this.curx<160){ // help
                         let checkerz = true;
@@ -316,7 +321,7 @@ export class GABEPPU{
 
 
                             if(LCDC&2){
-                                if(this.oampointer<9){
+                                if(this.oampointer<10){
                                 const gx = (this.oamarray[this.oampointer]&0x00FF0000) >>> 16;
                                 
                                 if(gx<=this.curx+8){
@@ -442,19 +447,24 @@ export class GABEPPU{
                                 let output = false;
                                 if(this.SCXWP>0){
                                     this.SCXWP--;
+
                                     if(this.windowing){
                                         output = true;
+                                    }else{
+                                 this.pixelbuffer.size--;
+                                this.pixelbuffer.head++;
+                                if(this.pixelbuffer.head==16) this.pixelbuffer.head = 0;                                       
                                     }
                                 }else{ // use object
                                     output = true;
                                     if(this.objectbuffer.size>0){
                                         let objpix = this.objectbuffer.dataz[this.objectbuffer.head];
-                                        
-                                        if(objpix&3){
+                                      
+                                        if(objpix&3){  
                                             let cpal = this.memory.PPUreadByte(0xFF48+((objpix&16)>>4)); // Not swearing!
                                             let truepix = (cpal & (3 << ((objpix&3)*2))) >> ((objpix&3)*2);
-                                            
-                                            if((finpix==0) || ((objpix&128)==0)) finpix = truepix;
+                                         
+                                            if((rawpix==0) || ((objpix&128)==0)) finpix = truepix;
                                             
                                         }
                                         
@@ -483,6 +493,7 @@ export class GABEPPU{
                         
 
                         }else{ // add penalty and move onto next oamptr
+
                             const objectsprite = this.oamarray[this.oampointer];
                             
                             this.oampointer++;
@@ -499,7 +510,7 @@ export class GABEPPU{
                             this.lasttileforoam = temptileoams;
                             this.m3p += penaltyz;
                             const objectx = ((objectsprite & 0x00FF0000) >>> 16)-8;
-                            
+                  
                             const objectidx = (objectsprite & 0x0000FF00) >>> 8;
                             
                             const objectflag = objectsprite & 0xFF;
@@ -540,9 +551,10 @@ export class GABEPPU{
                                 if(objectx+i>=this.curx){
                                     let pospos = (this.objectbuffer.head + i)&0xF; // div 16
                                     if(this.objectbuffer.size>i){
-                                        if(this.objectbuffer.dataz[pospos]&0x03==0){ //trans
-                                            this.objectbuffer.dataz[this.objectbuffer.pospos] = saveint;
-           
+                                        
+                                        if((this.objectbuffer.dataz[pospos]&0x03)===0){ //trans
+                                            this.objectbuffer.dataz[pospos] = saveint;
+                                            
                                             
                                         }
                                     }else{
@@ -583,6 +595,7 @@ export class GABEPPU{
                 this.incremently();
                 this.extracycle = 0;
                 if(this.getly()===144){
+                   
                     this.wiy = -1;
 
                     this.mode = 1;

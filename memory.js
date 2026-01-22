@@ -53,7 +53,7 @@ export class gabememory{
 
 
 
-
+ if(address>=0xC000){
             if(address==0xFF00) this.bigmemory[address] = (this.joypad.getsgn() & 0x0F) | (this.bigmemory[address] & 0x30) | 0xC0;
            
             let vramchecker = true;
@@ -61,13 +61,15 @@ export class gabememory{
                 if(address>=0xFE00&&address<=0xFE9F) vramchecker = false;
             }
             if(this.ppuinfo.mode==3&&address>=0x8000&&address<=0x9FFF) vramchecker = false;
-            
+            if(this.OAMtransfercycle){
+                if(address<0xFF80||address>=0xFFFE) vramchecker = false;
+            }
             
             if(!vramchecker) return 0xFF;
+            return this.bigmemory[address];
             
-            
-
-        if(address<0xC000){
+    }
+       else{
             switch(this.mbc){
                 case 0:
                     return this.bigmemory[address];
@@ -110,7 +112,7 @@ export class gabememory{
 
         }
 
-        return this.bigmemory[address];
+        
 
     }
     
@@ -177,6 +179,12 @@ export class gabememory{
 
         }else{
             let vramchecker = true;
+            if(this.OAMtransfercycle){
+                if(address<0xFF80||address>=0xFFFE) vramchecker = false;
+            }
+            
+
+            
             if(this.ppuinfo.mode===2||this.ppuinfo.mode===3){
                 if(address>=0xFE00&&address<=0xFE9F) vramchecker = false;
             }
@@ -200,6 +208,14 @@ export class gabememory{
                         this.bigmemory[address] = (this.joypad.getsgn() & 0x0F) | (value & 0x30) | 0xC0;
                         
                         this.vramchecker = false;
+                    break;
+                    case 0xFF02:
+                        if(value==0x81){
+                            this.bigmemory[0xFF01] = 0xFF;
+                            this.vramchecker = false;
+                            this.bigmemory[0xFF02] = 0x80;
+                            this.bigmemory[0xFF0F] = this.bigmemory[0xFF0F] | 0x08;
+                        }
                     break;
                     case 0xFF04:
                         this.bigmemory[address] = 0;
