@@ -8,9 +8,11 @@ let clockhz = 4194304;
 let lastTime = 0;
 let accTime  = 0; 
 let accTimer = 0;
+let iscolor = false;
 let tcycle = 0;
 let debugging = false;
 const msPerTimer = 1000/61;
+
 let uploadedfile = null;
 const reader = new FileReader();
   
@@ -114,17 +116,20 @@ function runLoop(now) {
   let delta = now - lastTime;
   accTime  += delta;
   accTimer += delta;
+
   lastTime = now;
 
   let msPerTick = 1000 / clockhz;
 
   if (accTimer >= msPerTimer) {
     ppu.showscreen();
-        if(debugging){
+    if(debugging){
+
         debuggers.showall();
+
+
         
     }
-
     
     //console.log(memory.currentrombank + " " + memory.bankingmode);
     //console.log(memory.PPUreadByte(0xFF00).toString(2));
@@ -132,13 +137,17 @@ function runLoop(now) {
 
         
        
-    accTimer -= msPerTimer;
+    accTimer = 0;
   }  
+  
+
   while (accTime >= msPerTick) {
     tcycle++;
     ppu.cyclerun();
-    
-    if(tcycle%4===0)cpu.cyclerun();
+    if(iscolor){ // we trick show double hz later
+        if(tcycle%2===0)cpu.cyclerun();
+    }
+    else if(tcycle%4===0)cpu.cyclerun();
 
     /*
     if(tcycle%456==0){
@@ -223,7 +232,15 @@ document.getElementById("userUpload").addEventListener('change',function(event){
     
 });
 
+document.getElementById("SpeedTextBox").addEventListener("input",function(){
 
+    const intsss = parseInt(this.value);
+    if(intsss!=0&&intsss<=32000000) clockhz = intsss;   
+    if(clockhz>=1000000) document.getElementById("Speedshow").textContent = (clockhz/1000000).toFixed(2) + "Mhz";
+    else if(clockhz>=1000) document.getElementById("Speedshow").textContent = (clockhz/1000).toFixed(2) + "Khz";
+    else document.getElementById("Speedshow").textContent = clockhz + "hz";
+
+});
 
 reset();
 

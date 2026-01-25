@@ -174,3 +174,9 @@ background-color: chocolate;
   color: black;
 
 }
+#SpeedTextBox{
+  height: 15px;
+  color: black;
+  font-size: 8px;
+  width: 75px;
+}

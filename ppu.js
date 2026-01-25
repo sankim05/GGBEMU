@@ -361,7 +361,7 @@ export class GABEPPU{
 
                                     if(this.windowing){
                                         const wix = (this.wcurx>>3)&0x1F;
-                                        this.wcurx+=8;
+                                        
                                         if(LCDC&64) this.temptileid = this.memory.PPUreadByte(0x9C00+((this.wiy>>3)<<5)+wix); 
                                         else this.temptileid = this.memory.PPUreadByte(0x9800+((this.wiy>>3)<<5)+wix);  
                                     }else{
@@ -418,7 +418,9 @@ export class GABEPPU{
                                                     this.pixelbuffer.size++;
                                                     if(this.pixelbuffer.tail===16) this.pixelbuffer.tail = 0;
                                                 }
-                                                this.petx+=8;
+                                                if(this.windowing) this.wcurx+=8;
+                                                else this.petx+=8;
+                                                
                                             this.gagocycle = 0;
                                         }else{
                                             this.gagocycle--;
@@ -497,6 +499,7 @@ export class GABEPPU{
                             const objectsprite = this.oamarray[this.oampointer];
                             
                             this.oampointer++;
+                            
                             let objecty = this.getly() - ((objectsprite >>> 24) - 16);
                             let penaltyz = 6;
                             let temptileoams = ((this.curx + this.memory.PPUreadByte(0xFF43)))>>3;

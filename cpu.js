@@ -306,6 +306,7 @@ export class GABECPU{
         let byte2 = this.memory.readByte(this.PC+1);
   
         let byte3 = this.memory.readByte(this.PC+2);
+        
         if(this.haltfail){
             byte2 = byte1;
             byte3 = byte2;
