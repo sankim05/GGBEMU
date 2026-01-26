@@ -182,7 +182,21 @@ export class gabememory{
                         }
                         return this.bigmemory[address];
 
+
+                case 5:
+                    if(address>=0x4000&&address<=0x7FFF){
+                        return this.rom[(this.currentrombank*0x4000)+(address-0x4000)];
+                    }
+
+                        if(address>=0xA000&&this.cartridgetype!=0x19&&this.cartridgetype!=0x1C){
+                            if(this.extraramon) return this.rambank[this.ramarea*0x2000+(address-0xA000)];
+                            return 0xFF;
+                        }
+                        return this.bigmemory[address];
+
                     
+
+
 
 
                     
@@ -485,7 +499,7 @@ export class gabememory{
                     }else{ // latch clock data
                         if(this.rtcon){
                             if(this.lastrtcwrote == 0 && value == 1){
-                                const diff = 0;
+                                let diff = 0;
                                 if(this.rtcflag&0x64){
                                     diff = this.beforeofftime - this.rtcunixtime - this.rtcstoptime;
 
@@ -518,6 +532,60 @@ export class gabememory{
                     }     
 
                 return;
+
+                case 5:
+                 
+                    if(address>=0x8000){
+
+                        if(address>=0xA000&&this.cartridgetype!=0x19&&this.cartridgetype!=0x1C){
+                            if(this.extraramon) this.rambank[this.ramarea*0x2000+(address-0xA000)] = value;
+                        }
+                        else this.bigmemory[address] = value;
+                        return;
+                    }
+                    else if(address<=0x1FFF){
+                        if((value&0xF)==0xA&&this.cartridgetype!=0x19&&this.cartridgetype!=0x1C){
+                            this.extraramon = true;
+                        }else{
+                            this.extraramon = false;
+                        }
+                    }
+                    else if(address<=0x2FFF){
+                        const banknum = (value&1) << 8;
+                        this.currentrombank = ((this.currentrombank&0xFF) | banknum)&this.rombankmasker;
+
+                    }
+                    else if(address<=0x3FFF){
+                        
+                        
+                        
+                        this.currentrombank = (this.currentrombank&256) | (value&this.rombankmasker);
+                        
+                        
+                    }else if(address<=0x5FFF){
+
+                        switch(this.ramsize){
+                            case 0x02:
+                                this.ramarea = 0;
+                            break;
+                            case 0x03:
+                                this.ramarea = value&3;
+                            break;
+                            case 0x04:
+                                this.ramarea = value&0xF;
+                            break;
+                            case 0x05:
+                                this.ramarea = value&7;
+                            break;
+                        }
+                            
+                        
+
+                    }
+
+                return;
+
+
                 default:
       
                     if(address>=0x8000){

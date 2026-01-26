@@ -10,7 +10,7 @@ export class GABEjoy{
         this.lastdih = 0xF;
 
 
-
+//sry for hardcoding im lazy
         const DpadDown =  document.getElementById("DpadDown");
         if(DpadDown){
             DpadDown.addEventListener("mousedown",(obj) =>{
@@ -23,7 +23,18 @@ export class GABEjoy{
                 if(this.dpadbitsK&8){
                     DpadDown.style.backgroundColor = "";
                 }
-            });                        
+            });
+            DpadDown.addEventListener("touchstart",(obj) =>{
+                this.dpadbitsB = this.dpadbitsB & 7;
+                DpadDown.style.backgroundColor = "LightGrey";
+                this.updateinput(); 
+            });
+            DpadDown.addEventListener("touchend",(obj) =>{
+                this.dpadbitsB = this.dpadbitsB | 8;
+                if(this.dpadbitsK&8){
+                    DpadDown.style.backgroundColor = "";
+                }
+            });                                          
         }
 
         const DpadUp =  document.getElementById("DpadUp");
@@ -39,7 +50,20 @@ export class GABEjoy{
                 if(this.dpadbitsK&4){
                     DpadUp.style.backgroundColor = "";
                 }
-            });                           
+            });
+            DpadUp.addEventListener("touchstart",(obj) =>{
+                this.dpadbitsB = this.dpadbitsB & 0xB;
+                DpadUp.style.backgroundColor = "LightGrey";
+                this.updateinput();
+            });
+
+            DpadUp.addEventListener("touchend",(obj) =>{
+                this.dpadbitsB = this.dpadbitsB | 4;
+                if(this.dpadbitsK&4){
+                    DpadUp.style.backgroundColor = "";
+                }
+            });               
+            
         }
 
         const DpadLeft =  document.getElementById("DpadLeft");
@@ -54,7 +78,18 @@ export class GABEjoy{
                 if(this.dpadbitsK&2){
                     DpadLeft.style.backgroundColor = "";
                 }
-            });                        
+            });
+            DpadLeft.addEventListener("touchstart",(obj) =>{
+                this.dpadbitsB = this.dpadbitsB & 0xD;
+                DpadLeft.style.backgroundColor = "LightGrey";
+                this.updateinput();
+            });
+            DpadLeft.addEventListener("touchend",(obj) =>{
+                this.dpadbitsB = this.dpadbitsB | 2;
+                if(this.dpadbitsK&2){
+                    DpadLeft.style.backgroundColor = "";
+                }
+            });                                    
         }
 
         const DpadRight =  document.getElementById("DpadRight");
@@ -69,7 +104,18 @@ export class GABEjoy{
                 if(this.dpadbitsK&1){
                     DpadRight.style.backgroundColor = "";
                 }
-            });                           
+            });
+            DpadRight.addEventListener("touchstart",(obj) =>{
+                this.dpadbitsB = this.dpadbitsB & 0xE;
+                DpadRight.style.backgroundColor = "LightGrey";
+                this.updateinput();
+            });
+            DpadRight.addEventListener("touchend",(obj) =>{
+                this.dpadbitsB = this.dpadbitsB | 1;
+                if(this.dpadbitsK&1){
+                    DpadRight.style.backgroundColor = "";
+                }
+            });                                          
         }
 
         const BtnStart =  document.getElementById("BtnStart");
@@ -84,7 +130,18 @@ export class GABEjoy{
                 if(this.btnbitsK&8){
                     BtnStart.style.backgroundColor = "";
                 }
-            });                        
+            });
+            BtnStart.addEventListener("touchstart",(obj) =>{
+                this.btnbitsB = this.btnbitsB & 7;
+                BtnStart.style.backgroundColor = "LightGrey";
+                this.updateinput();
+            });
+            BtnStart.addEventListener("touchend",(obj) =>{
+                this.btnbitsB = this.btnbitsB | 8;
+                if(this.btnbitsK&8){
+                    BtnStart.style.backgroundColor = "";
+                }
+            });                                      
         }
 
 
@@ -100,7 +157,18 @@ export class GABEjoy{
                 if(this.btnbitsK&4){
                     BtnSelect.style.backgroundColor = "";
                 }
-            });                        
+            });
+            BtnSelect.addEventListener("touchstart",(obj) =>{
+                this.btnbitsB = this.btnbitsB & 0xB;
+                BtnSelect.style.backgroundColor = "LightGrey";
+                this.updateinput();
+            });
+            BtnSelect.addEventListener("touchend",(obj) =>{
+                this.btnbitsB = this.btnbitsB | 4;
+                if(this.btnbitsK&4){
+                    BtnSelect.style.backgroundColor = "";
+                }
+            });                                     
         }
 
 
@@ -116,7 +184,18 @@ export class GABEjoy{
                 if(this.btnbitsK&2){
                     BtnB.style.backgroundColor = "";
                 }
-            });                        
+            });
+            BtnB.addEventListener("touchstart",(obj) =>{
+                this.btnbitsB = this.btnbitsB & 0xD;
+                BtnB.style.backgroundColor = "DarkRed";
+                this.updateinput();
+            });
+            BtnB.addEventListener("touchend",(obj) =>{
+                this.btnbitsB = this.btnbitsB | 2;
+                if(this.btnbitsK&2){
+                    BtnB.style.backgroundColor = "";
+                }
+            });                                       
         }
 
 
@@ -132,7 +211,18 @@ export class GABEjoy{
                 if(this.btnbitsK&1){
                     BtnA.style.backgroundColor = "";
                 }
-            });                        
+            });
+            BtnA.addEventListener("touchstart",(obj) =>{
+                this.btnbitsB = this.btnbitsB & 0xE;
+                BtnA.style.backgroundColor = "DarkRed";
+                this.updateinput();                                
+            });
+            BtnA.addEventListener("touchend",(obj) =>{
+                this.btnbitsB = this.btnbitsB | 1;
+                if(this.btnbitsK&1){
+                    BtnA.style.backgroundColor = "";
+                }
+            });                                       
         }
 
 document.addEventListener("keydown",(event)=>{
