@@ -88,7 +88,7 @@ export class GABECPU{
         this.AF = 0x0000;
         this.BC = 0x0000;
         this.DE = 0x0000;
-        this.HL = 0x000D;
+        this.HL = 0x0000;
 
         this.PC = 0x0000;
         this.SP = 0xFFFE;
@@ -100,6 +100,7 @@ export class GABECPU{
         this.mcycle = 0;
         this.cab = false;
         this.imeski = false;
+
         this.extracycle = 0; // actually wait until it hits and reset to 0 when finished instruction
       
     }
@@ -144,7 +145,7 @@ export class GABECPU{
    _8bitsub(a,b,carry = false){ // a-b-carry (optional)
         this.NFLAG = 1; 
         const carries = carry ? this.CFLAG : 0;
-        const res = a-b-carries;
+        let res = a-b-carries;
 
         
             
@@ -159,7 +160,6 @@ export class GABECPU{
 
        
 
-           
         
         if((res&0xFF)===0) this.ZFLAG = 1;
         else this.ZFLAG = 0;
@@ -209,7 +209,7 @@ export class GABECPU{
             this.memory.writeByte(0xFF0F,this.memory.readByte(0xFF0F)|4);
         }
 
-           if(this.mcycle%4096===0) this.memory.incrementdiv(); 
+           if(this.mcycle%64===0) this.memory.incrementdiv(); 
         if(this.memory.readByte(0xFF07)&4){
             let incz = false;
             switch(this.memory.readByte(0xFF07)&3){
@@ -261,7 +261,7 @@ export class GABECPU{
                         }
                     }
                     this.currentinterrupt = bos;
-                    //console.log(bos);
+                    //console.log(bos + " " + this.memory.PPUreadByte(0xFF44));
                     
                 }else{
                     this.ishalted = false;
@@ -273,12 +273,22 @@ export class GABECPU{
         }
         
 
-            if(this.memory.OAMtransfercycle){
+        if(this.memory.OAMtransfercycle){
+            
             this.memory.PPUwriteByte(0xFE00|(this.memory.OAMtransfercycle-1),this.memory.PPUreadByte((this.memory.PPUreadByte(0xFF46)<<8)|(this.memory.OAMtransfercycle-1)));
             this.memory.OAMtransfercycle++;
             if(this.memory.OAMtransfercycle===161) this.memory.OAMtransfercycle = 0;
+
         }
-        
+        if(this.memory.serialwait){
+            this.memory.serialwait--;
+            if(this.memory.serialwait===0){
+                
+                this.memory.PPUwriteByte(0xFF0F,this.memory.PPUreadByte(0xFF0F)|8);
+                this.memory.PPUwriteByte(0xFF02,this.memory.PPUreadByte(0xFF02)&0x7F);
+                this.memory.PPUwriteByte(0xFF01,0xFF);
+            } 
+        }
         
             if(this.currentinterrupt){
 
@@ -292,17 +302,18 @@ export class GABECPU{
                     this.IME = false;
                    
                 }else if(this.extracycle===3){
-                    this.memory.writeByte(this.SP-1,this.PC>>8);
+                    this.memory.PPUwriteByte(this.SP-1,this.PC>>8);
                 }else if(this.extracycle===4){
-                    this.memory.writeByte(this.SP-2,this.PC&0xFF);
+                    this.memory.PPUwriteByte(this.SP-2,this.PC&0xFF);
                     this.SP-=2;
                 }
                 return;
             }
         
-        
-        const byte1 = this.memory.readByte(this.PC);
+        if(this.PC>0xFFFF) this.PC = this.PC & 0xFFFF;
 
+        const byte1 = this.memory.readByte(this.PC);
+        
         let byte2 = this.memory.readByte(this.PC+1);
   
         let byte3 = this.memory.readByte(this.PC+2);
@@ -310,7 +321,6 @@ export class GABECPU{
         if(this.haltfail){
             byte2 = byte1;
             byte3 = byte2;
-            
             this.haltfail = false;
         }
 
@@ -579,7 +589,9 @@ export class GABECPU{
                             //console.log(pos);
                             this.extracycle = 0;
                             
-                            this.PC= this.PC + pos + 2;
+                            this.PC= this.PC + pos+2;
+                            if(this.PC<0) this.PC+=0x10000;
+                            
                         }
                     break;   
                     case 0x09: // ADD HL,DE
@@ -662,6 +674,7 @@ export class GABECPU{
                             this.extracycle = 0;
                             
                             this.PC+=2;
+                           
                         }   
 
                         }else{
@@ -670,6 +683,7 @@ export class GABECPU{
                             this.extracycle = 0;
                             
                             this.PC= this.PC + 2 + pos;
+                            if(this.PC<0) this.PC+=0x10000;
                         }   
 
 
@@ -776,6 +790,7 @@ export class GABECPU{
                             this.extracycle = 0;
                             
                             this.PC= this.PC + pos + 2;
+                            if(this.PC<0) this.PC+=0x10000;
                         }   
 
 
@@ -868,6 +883,7 @@ export class GABECPU{
                             this.extracycle = 0;
                             
                             this.PC= this.PC + pos + 2;
+                            if(this.PC<0) this.PC+=0x10000;
                         }   
 
 
@@ -957,6 +973,7 @@ export class GABECPU{
                             this.extracycle = 0;
                             
                             this.PC= this.PC + pos + 2;
+                            if(this.PC<0) this.PC+=0x10000;
                         }   
 
 
@@ -1002,6 +1019,7 @@ export class GABECPU{
                         if(this.extracycle===1){
                             const cs = this.CFLAG;
                             this.registers.A = this._8bitsub(this.registers.A,1);
+                            
                             this.CFLAG = cs;
                             this.extracycle = 0;
                             
@@ -1012,7 +1030,7 @@ export class GABECPU{
                         if(this.extracycle===2){
                         
                             this.registers.A = byte2;
-                        
+                            
                             this.extracycle = 0;
                             
                             this.PC+=2;
@@ -2336,7 +2354,7 @@ export class GABECPU{
 
                     }else{
                         if(this.extracycle===5){
-                            this.PC = ((this.memory.readByte(this.SP+1)<<8) | this.memory.readByte(this.SP));
+                            this.PC = ((this.memory.PPUreadByte(this.SP+1)<<8) | this.memory.PPUreadByte(this.SP));
                             this.SP+=2;
                             this.extracycle = 0;
                             
@@ -2393,7 +2411,7 @@ export class GABECPU{
                         if(this.extracycle===6){ //watch closely
                             const target = (this.PC+3)&0xFFFF;
                             
-                            this.memory.writeByte(this.SP-2,target&0xFF);
+                            this.memory.PPUwriteByte(this.SP-2,target&0xFF);
                             this.PC = (byte3<<8) | byte2;
                             this.SP-=2;
                             this.extracycle = 0;
@@ -2401,7 +2419,7 @@ export class GABECPU{
                             
                         }else if(this.extracycle===5){
                             const target = (this.PC+3)&0xFFFF;
-                            this.memory.writeByte(this.SP-1,target>>8);
+                            this.memory.PPUwriteByte(this.SP-1,target>>8);
                         }       
 
                     }            
@@ -2457,7 +2475,7 @@ export class GABECPU{
 
                     }else{
                         if(this.extracycle===5){
-                            this.PC = ((this.memory.readByte(this.SP+1)<<8) | this.memory.readByte(this.SP));
+                            this.PC = ((this.memory.PPUreadByte(this.SP+1)<<8) | this.memory.PPUreadByte(this.SP));
                             this.SP+=2;
                             this.extracycle = 0;
                             
@@ -2469,7 +2487,7 @@ export class GABECPU{
                     case 0x09: // RET              
                         if(this.extracycle===4){
  
-                            this.PC = ((this.memory.readByte(this.SP+1)<<8) | this.memory.readByte(this.SP));
+                            this.PC = ((this.memory.PPUreadByte(this.SP+1)<<8) | this.memory.PPUreadByte(this.SP));
                             
                             this.SP+=2;
                             this.extracycle = 0;
@@ -5192,15 +5210,15 @@ export class GABECPU{
                         if(this.extracycle===6){ //watch closely
                             const target = (this.PC+3)&0xFFFF;
                             
-                            this.memory.writeByte(this.SP-2,target&0xFF);
+                            this.memory.PPUwriteByte(this.SP-2,target&0xFF);
                             this.PC = (byte3<<8) | byte2;
                             this.SP-=2;
                             this.extracycle = 0;
                             
-                            
+                           
                         }else if(this.extracycle===5){
                             const target = (this.PC+3)&0xFFFF;
-                            this.memory.writeByte(this.SP-1,target>>8);
+                            this.memory.PPUwriteByte(this.SP-1,target>>8);
                         }       
 
                     }                 
@@ -5209,15 +5227,15 @@ export class GABECPU{
                         if(this.extracycle===6){ //watch closely
                             const target = (this.PC+3)&0xFFFF;
                             
-                            this.memory.writeByte(this.SP-2,target&0xFF);
+                            this.memory.PPUwriteByte(this.SP-2,target&0xFF);
                             this.PC = (byte3<<8) | byte2;
                             this.SP-=2;
                             this.extracycle = 0;
-                            
+                           
                             
                         }else if(this.extracycle===5){
                             const target = (this.PC+3)&0xFFFF;
-                            this.memory.writeByte(this.SP-1,target>>8);
+                            this.memory.PPUwriteByte(this.SP-1,target>>8);
                         }       
                     break; 
                     case 0x0E: // ADC A,n8               
@@ -5260,7 +5278,7 @@ export class GABECPU{
 
                     }else{
                         if(this.extracycle===5){
-                            this.PC = ((this.memory.readByte(this.SP+1)<<8) | this.memory.readByte(this.SP));
+                            this.PC = ((this.memory.PPUreadByte(this.SP+1)<<8) | this.memory.PPUreadByte(this.SP));
                             this.SP+=2;
                             this.extracycle = 0;
                             
@@ -5318,15 +5336,15 @@ export class GABECPU{
                         if(this.extracycle===6){ //watch closely
                             const target = (this.PC+3)&0xFFFF;
                             
-                            this.memory.writeByte(this.SP-2,target&0xFF);
+                            this.memory.PPUwriteByte(this.SP-2,target&0xFF);
                             this.PC = (byte3<<8) | byte2;
                             this.SP-=2;
                             this.extracycle = 0;
-                            
+                           
                             
                         }else if(this.extracycle===5){
                             const target = (this.PC+3)&0xFFFF;
-                            this.memory.writeByte(this.SP-1,target>>8);
+                            this.memory.PPUwriteByte(this.SP-1,target>>8);
                         }       
 
                     }            
@@ -5382,7 +5400,7 @@ export class GABECPU{
 
                     }else{
                         if(this.extracycle===5){
-                            this.PC = ((this.memory.readByte(this.SP+1)<<8) | this.memory.readByte(this.SP));
+                            this.PC = ((this.memory.PPUreadByte(this.SP+1)<<8) | this.memory.PPUreadByte(this.SP));
                             this.SP+=2;
                             this.extracycle = 0;
                             
@@ -5394,7 +5412,7 @@ export class GABECPU{
                     case 0x09: // RETI            
                         if(this.extracycle===4){
                             this.imeski = true;
-                            this.PC = ((this.memory.readByte(this.SP+1)<<8) | this.memory.readByte(this.SP));
+                            this.PC = ((this.memory.PPUreadByte(this.SP+1)<<8) | this.memory.PPUreadByte(this.SP));
                             this.SP+=2;
                             this.extracycle = 0;
                             
@@ -5439,15 +5457,15 @@ export class GABECPU{
                         if(this.extracycle===6){ //watch closely
                             const target = (this.PC+3)&0xFFFF;
                             
-                            this.memory.writeByte(this.SP-2,target&0xFF);
+                            this.memory.PPUwriteByte(this.SP-2,target&0xFF);
                             this.PC = (byte3<<8) | byte2;
                             this.SP-=2;
                             this.extracycle = 0;
                             
-                            
+                          
                         }else if(this.extracycle===5){
                             const target = (this.PC+3)&0xFFFF;
-                            this.memory.writeByte(this.SP-1,target>>8);
+                            this.memory.PPUwriteByte(this.SP-1,target>>8);
                         }       
 
                     }                 
@@ -5912,7 +5930,7 @@ export class GABECPU{
                         }
                     }
                     this.currentinterrupt = bos;
-                   // console.log(bos);
+                    
 
                 
             }

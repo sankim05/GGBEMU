@@ -130,9 +130,9 @@ function runLoop(now) {
 
         
     }
-    
-    //console.log(memory.currentrombank + " " + memory.bankingmode);
-    //console.log(memory.PPUreadByte(0xFF00).toString(2));
+
+        //console.log(memory.PPUreadByte(0xFF40).toString(2) + " " + memory.PPUreadByte(0xFF45));
+ 
 
 
         
@@ -148,8 +148,16 @@ function runLoop(now) {
         if(tcycle%2===0)cpu.cyclerun();
     }
     else if(tcycle%4===0)cpu.cyclerun();
+    
 
-    /*
+
+    /* 
+       if(cpu.PC==0x40&&debugging){
+        running = false;
+              
+        accTime = 0;
+        break;
+    }  
     if(tcycle%456==0){
         if(ppu.getly()<144){
             console.log(memory.PPUreadByte(0xFF0F)&1);

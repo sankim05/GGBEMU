@@ -579,7 +579,7 @@ export class GABEdebugger{
         const readbyte = this.memory.PPUreadByte(this.CPU.PC);
         if(readbyte==0xCB) addstring = prefixtable[readbyte];
         else addstring = insttable[readbyte];
-        document.getElementById("Debugstringoutput").textContent = textthing + addstring + " HALTED : " + this.CPU.ishalted;
+        document.getElementById("Debugstringoutput").textContent = textthing + addstring + " HALT : " + this.CPU.ishalted + " STOP : " + this.CPU.stopped;
     }
     showall(){
         document.getElementById("RegiAshow").querySelector(".ramshowval").textContent = this.CPU.registers.A.toString(16).toUpperCase().padStart(2,'0');

@@ -24,7 +24,7 @@ export class GABEPPU{
         this.wiy = -1;
         this.m3p = 0;
         this.windowing = false;
- 
+        //this.cyclez = 0;
         this.pixelbuffer = {
             dataz : new Uint8Array(16).fill(0),
             head : 0,
@@ -101,6 +101,7 @@ export class GABEPPU{
     showscreen(){
         
         if(this.turnedoff){
+            this.mode = 0;
             this.canvas.fillStyle = "rgb(0, 0, 0)"
             this.canvas.fillRect(0, 0, 480, 432);
 
@@ -260,7 +261,7 @@ export class GABEPPU{
         
         const LCDC = this.memory.PPUreadByte(0xFF40);
         if(!this.turnedoff){
-            
+            //this.cyclez++;
             this.extracycle++;
             
             if(LCDC&0x80){
@@ -339,7 +340,7 @@ export class GABEPPU{
                                         if(LCDC&1){ // windowing
                                             if(LCDC&32){
                                         if(this.wytrigger){
-                                            if(this.memory.PPUreadByte(0xFF4B)===this.curx+7){
+                                            if(this.memory.PPUreadByte(0xFF4B)<=this.curx+7){
                                                 this.windowing = true;
                                                 
                                                 this.pixelbuffer.head = 0;
@@ -598,7 +599,7 @@ export class GABEPPU{
                 this.incremently();
                 this.extracycle = 0;
                 if(this.getly()===144){
-                   
+                   //console.log(this.cyclez%70224);
                     this.wiy = -1;
 
                     this.mode = 1;
@@ -623,9 +624,10 @@ export class GABEPPU{
                 
             }
             if(!this.turnedoff){
-            let STATs = this.memory.PPUreadByte(0xFF41);
+            let STATs = this.memory.PPUreadByte(0xFF41)|0x80;
+           
             //if(this.memory.PPUreadByte(0xFF45))console.log(this.getly() + " " + this.memory.PPUreadByte(0xFF45));
-            
+           
            
             if(this.memory.PPUreadByte(0xFF45)===this.getly()){
                 STATs = STATs | 4;
