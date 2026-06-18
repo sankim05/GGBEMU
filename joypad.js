@@ -251,13 +251,13 @@ document.addEventListener("keydown",(event)=>{
             this.updateinput();     
             document.getElementById("DpadRight").style.backgroundColor = "LightGrey";              
         break;
-        case "V":
+        case "B":
             this.btnbitsK = this.btnbitsK & 7;
             
              this.updateinput();       
             document.getElementById("BtnStart").style.backgroundColor = "LightGrey";              
         break;
-        case "B":
+        case "V":
             this.btnbitsK = this.btnbitsK & 0xB;
             
             this.updateinput();        
@@ -308,14 +308,14 @@ document.addEventListener("keyup",(event)=>{
                 document.getElementById("DpadRight").style.backgroundColor = "";
             }     
         break;
-        case "V":
+        case "B":
             this.btnbitsK = this.btnbitsK | 8;
             if(this.btnbitsB&8){
              
                 document.getElementById("BtnStart").style.backgroundColor = "";
             }     
         break;
-        case "B":
+        case "V":
             this.btnbitsK = this.btnbitsK | 4;
             if(this.btnbitsB&4){
              

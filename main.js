@@ -3,15 +3,20 @@ import { GABEPPU } from './ppu.js';
 import { gabememory } from './memory.js';
 import { GABEdebugger } from './debug.js';
 import { GABEjoy } from './joypad.js';
+import { GABEAPU } from './apu.js';
 let running = false;
 let clockhz = 4194304;
 let lastTime = 0;
 let accTime  = 0; 
 let accTimer = 0;
+let audiocycle = 0;
 let iscolor = false;
 let tcycle = 0;
 let debugging = false;
+
+
 const msPerTimer = 1000/61;
+
 
 let uploadedfile = null;
 const reader = new FileReader();
@@ -42,11 +47,13 @@ for(let j=0;j<15;j++){
 
 }
 const memory = new gabememory();
-const cpu = new GABECPU(memory);
+
 const ppu = new GABEPPU(memory);
 const joypad = new GABEjoy(memory);
+const apu = new GABEAPU(memory);
+const cpu = new GABECPU(memory,apu);
 memory.ppuinfo = ppu;
-
+memory.apuinfo = apu;
 memory.joypad = joypad;
 var canvas = document.getElementById("Display");
 if (canvas.getContext) {
@@ -83,9 +90,11 @@ function reset(){
     lastTime = 0;
     accTime  = 0; 
     accTimer = 0;
+    audiocycle = 0;
     tcycle = 0;
     cpu.reset();
     ppu.reset();
+    apu.reset();
     memory.reset();
     joypad.reset();
     ppu.showscreen();
@@ -122,7 +131,7 @@ function runLoop(now) {
   let msPerTick = 1000 / clockhz;
 
   if (accTimer >= msPerTimer) {
-    ppu.showscreen();
+    ppu.showscreen(); //we will show it like 60hz cuz if we draw it every 4mhz it will LAG
     if(debugging){
 
         debuggers.showall();
@@ -141,6 +150,15 @@ function runLoop(now) {
   }  
   
 
+
+
+    
+
+        
+       
+
+
+
   while (accTime >= msPerTick) {
     tcycle++;
     ppu.cyclerun();
@@ -149,7 +167,13 @@ function runLoop(now) {
     }
     else if(tcycle%4===0)cpu.cyclerun();
     
+    
 
+    audiocycle+=10;
+    if(audiocycle>=951){
+        audiocycle -=951;
+        apu.updateAudioBuffer();
+    }
 
     /* 
        if(cpu.PC==0x40&&debugging){
@@ -174,7 +198,21 @@ function runLoop(now) {
 document.getElementById("EmuReset").addEventListener("click",reset);
 document.getElementById("EmuRun").addEventListener("click",async function(){
     if(running) return;
-    
+
+    if(apu.audioContext==null){
+        apu.audioContext = new AudioContext();
+        await apu.audioContext.audioWorklet.addModule('./audioprocessor.js');
+        apu.Nodez = new AudioWorkletNode(apu.audioContext,'Audioprocessorreal', {
+
+            outputChannelCount: [2]
+
+        });
+
+        apu.Nodez.connect(apu.audioContext.destination);
+
+    }
+
+
     running = true;
     document.getElementById("pausedtxt").textContent = "현재 실행 중";
     lastTime = 0;
@@ -198,7 +236,10 @@ document.getElementById("EmuStep").addEventListener("click",function(){
 
     if (!running){
         
-        for(let i=0;i<4;i++)ppu.cyclerun();
+        for(let i=0;i<4;i++){
+            ppu.cyclerun();
+            if(i%2)apu.cyclerun();
+        }
         cpu.cyclerun();
         ppu.showscreen();
         debuggers.showall();

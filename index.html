@@ -56,15 +56,15 @@
     Dpad: WASD
     <br>
     A:K B:J
-    <br> start: V select: B
+    <br> select: V start: B
     
 <div id="actionButtons">
 <button type="button" class = "actionbtn" id = "BtnA"> A </button>
 <button type="button" class = "actionbtn" id = "BtnB"> B </button>
 </div>
 <div id="startSelectButtons">
-<button type="button" class = "longbtn" id = "BtnStart"> start </button>
 <button type="button" class = "longbtn" id = "BtnSelect"> select </button>
+<button type="button" class = "longbtn" id = "BtnStart"> start </button>
 </div>
 </div>
 
@@ -83,9 +83,17 @@
 <div id = "DEBUGPANEL">
 메모리
 
-<input type="text" id = "RAMPOKETEXTBOX">
+<input type="text" id = "RAMPOKETEXTBOX" placeholder="확인할 주소(16진수) 입력">
 
 </input>
+
+<button id = "RAMUPDATEBUTTON">값 바꾸기</button>
+
+<input type="text" id = "RAMUPDATETEXTBOX" placeholder="바꿀 값(0~255 십진수) 입력">
+
+    
+</input>
+
 <span id="Debugstringoutput">
     SEEING : 0000 EXECUTING : NOP
 </span>
@@ -119,6 +127,7 @@
 
 
 <div class = "RAMSHOW blocker">
+
     <div id = "RegiAshow" class = "ramcopyz">
         <span class = "ramshowidx">
             A
@@ -290,6 +299,48 @@
 </div>
 
 </div>
+<br>
+<br>
+<br>
+<div id = "volumecontrol">
+
+    <span id = "vcMaster" class = "vcBox">
+        <span class = "vcText vcNumber">100</span>
+        
+        <input type="range" class = "vcSlider" id="vsMaster" min="0" max="100" value="100">
+
+        <span class = "vcText">마스터 볼륨</span>
+    </span>
+    <span id = "vcCH1" class = "vcBox">
+        <span class = "vcText vcNumber">100</span>
+        
+        <input type="range" class = "vcSlider" id="vsCH1" min="0" max="100" value="100">
+
+        <span class = "vcText">사각파 1</span>
+    </span>
+    <span id = "vcCH2" class = "vcBox">
+        <span class = "vcText vcNumber">100</span>
+        
+        <input type="range" class = "vcSlider" id="vsCH2" min="0" max="100" value="100">
+
+        <span class = "vcText">사각파 2</span>
+    </span>
+    <span id = "vcCH3" class = "vcBox">
+        <span class = "vcText vcNumber">100</span>
+        
+        <input type="range" class = "vcSlider" id="vsCH3" min="0" max="100" value="100">
+
+        <span class = "vcText">웨이브</span>
+    </span>
+    <span id = "vcCH4" class = "vcBox">
+        <span class = "vcText vcNumber">100</span>
+        
+        <input type="range" class = "vcSlider" id="vsCH4" min="0" max="100" value="100">
+
+        <span class = "vcText">노이즈</span>
+    </span>    
+</div>
+
 </body>
 
 

@@ -102,7 +102,7 @@ export class GABEPPU{
         
         if(this.turnedoff){
             this.mode = 0;
-            this.canvas.fillStyle = "rgb(0, 0, 0)"
+            this.canvas.fillStyle = "rgb(183, 137, 203)"
             this.canvas.fillRect(0, 0, 480, 432);
 
         }else{

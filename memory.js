@@ -44,6 +44,7 @@ export class gabememory{
         this.bankingmode = 0;
         this.currentrombank = 1;
         this.ppuinfo = null;
+        this.apuinfo = null;
         this.joypad = null;
         this.ramarea = 0;
         this.extraramon = false;
@@ -670,6 +671,72 @@ return this.bigmemory[address&0xFFFF];
                     case 0xFF04:
                         this.bigmemory[address] = 0;
                         this.vramchecker = false;
+                    break;
+                    case 0xFF11:
+                        this.bigmemory[address] = value;
+                        this.apuinfo.updateChannelLengthFromMemoryWrite(0,value);
+                        this.vramchecker = false;
+                    break;
+                    case 0xFF12:
+                        this.bigmemory[address] = value;
+
+                        if((value >> 3) ===0){
+                            this.apuinfo.ChannelDAC[0] = 0;
+                        }else{
+                            this.apuinfo.ChannelDAC[0] = 1;
+                        }
+
+
+                        this.vramchecker = false;
+
+                    break;
+                    case 0xFF14:
+                        if((value&64)&&(!(this.bigmemory[address]&64)))this.apuinfo.updateAPUFromMemoryWrite(0)
+                        this.bigmemory[address] = value;
+                        if(value&128){
+                            if(this.apuinfo.ChannelDAC[0]){
+                                this.apuinfo.ChannelOn[0] = 1;
+                                this.apuinfo.updateChannelLengthFromMemoryWrite(0,this.bigmemory[0xFF11]);
+                                this.apuinfo.C1ShadowReg = ((this.bigmemory[0xFF14]&0x07) << 8) | this.bigmemory[0xFF13];
+                            }
+                        }
+                        this.vramchecker = false;
+                    break;        
+                    case 0xFF16:
+                        this.bigmemory[address] = value;
+                        this.apuinfo.updateChannelLengthFromMemoryWrite(1,value);
+                        this.vramchecker = false;
+                    break;
+                    case 0xFF19:
+                        if((value&64)&&(!(this.bigmemory[address]&64)))this.apuinfo.updateAPUFromMemoryWrite(1)
+                        this.bigmemory[address] = value;
+                        
+                        this.vramchecker = false;
+                    break;  
+                    case 0xFF1B:
+                        this.bigmemory[address] = value;
+                        this.apuinfo.updateChannelLengthFromMemoryWrite(2,value);
+                        this.vramchecker = false;
+                    break;
+                    case 0xFF1E:
+                        if((value&64)&&(!(this.bigmemory[address]&64)))this.apuinfo.updateAPUFromMemoryWrite(2)
+                        this.bigmemory[address] = value;
+                        
+                        this.vramchecker = false;
+                    break;
+                    case 0xFF20:
+                        this.bigmemory[address] = value;
+                        this.apuinfo.updateChannelLengthFromMemoryWrite(3,value);
+                        this.vramchecker = false;
+                    break;
+                    case 0xFF23:
+                        if((value&64)&&(!(this.bigmemory[address]&64)))this.apuinfo.updateAPUFromMemoryWrite(3)
+                        this.bigmemory[address] = value;
+                        
+                        this.vramchecker = false;
+                    break;                                                                                                              
+                    case 0xFF26:
+                        this.bigmemory[address] = (this.bigmemory[address]&0x7F) | (value&0x80);
                     break;
                     case 0xFF41:
                         this.bigmemory[address] = (this.bigmemory[address]&3)|(value&0xFC);

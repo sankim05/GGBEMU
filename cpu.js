@@ -6,8 +6,9 @@ interruptjumptable[0x04] = 0x50;
 interruptjumptable[0x08] = 0x58;
 interruptjumptable[0x10] = 0x60;
 export class GABECPU{
-    constructor(memory){
+    constructor(memory,apu){
         this.memory = memory;
+        this.apu = apu;
         this.registers = {
             A : 0x00,
             B : 0x00,
@@ -28,7 +29,8 @@ export class GABECPU{
         this.mcycle = 0;
         this.imeski = false;
         this.cab = false;
-    
+        this.colorSpeed = false;
+        
        // this.fstring = "A:01 F:b0 B:00 C:13 D:00 E:d8 H:01 L:4d SP:fffe PC:0100 PCMEM:00,c3,13,02";
     }
     get AF(){
@@ -100,7 +102,7 @@ export class GABECPU{
         this.mcycle = 0;
         this.cab = false;
         this.imeski = false;
-
+        this.colorSpeed = false;
         this.extracycle = 0; // actually wait until it hits and reset to 0 when finished instruction
       
     }
@@ -208,8 +210,16 @@ export class GABECPU{
             this.cab = false;
             this.memory.writeByte(0xFF0F,this.memory.readByte(0xFF0F)|4);
         }
+            let apucon = 16;
+            if(this.colorSpeed){
+                apucon = 32;
+            }
+            apucon = this.memory.readByte(0xFF04)&apucon;
 
            if(this.mcycle%64===0) this.memory.incrementdiv(); 
+           if((apucon===0)&&(apucon ^ (this.memory.readByte(0xFF04)&apucon))){
+                this.apu.APUcycle();
+           }
         if(this.memory.readByte(0xFF07)&4){
             let incz = false;
             switch(this.memory.readByte(0xFF07)&3){

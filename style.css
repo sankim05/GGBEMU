@@ -51,6 +51,9 @@
   #DEBUGOPENbtn{
     color : black;
   }
+  #RAMUPDATEBUTTON{
+    color : black;
+  } 
   #DEBUGPANEL{
    display : none;
 
@@ -174,9 +177,24 @@ background-color: chocolate;
   color: black;
 
 }
+#RAMUPDATETEXTBOX{
+  color: black;
+
+}
 #SpeedTextBox{
   height: 15px;
   color: black;
   font-size: 8px;
   width: 75px;
+}
+
+.vcBox{
+  writing-mode: vertical-lr;
+  direction: rtl;
+
+}
+
+.vcText{
+  writing-mode: horizontal-tb;
+  direction: ltr;
 }

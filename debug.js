@@ -524,6 +524,7 @@ export class GABEdebugger{
         this.PPU = PPU;
 
         this.memviewer = 0;
+        this.memvalue = 0;
         const inputbox =  document.getElementById("RAMPOKETEXTBOX");
         if(inputbox){
         inputbox.addEventListener("input",(obj) =>{
@@ -534,6 +535,35 @@ export class GABEdebugger{
         this.updatemessage();
         });            
         }
+        const inputbox2 =  document.getElementById("RAMUPDATETEXTBOX");
+        if(inputbox2){
+        inputbox2.addEventListener("input",(obj) =>{
+  
+         this.memvalue = parseInt(obj.target.value,10);
+         if(Number.isNaN(this.memvalue)){
+            this.memvalue = 0;
+            inputbox2.value = "";
+         }else{
+            if(this.memvalue>255)this.memvalue=255;
+             else if(this.memvalue<0)this.memvalue=0;
+            inputbox2.value = this.memvalue;
+         }
+
+            
+
+        });            
+        }
+        const inputbtn =  document.getElementById("RAMUPDATEBUTTON");
+        if(inputbtn){
+        inputbtn.addEventListener("click",(obj) =>{
+  
+         this.memory.PPUwriteByte(this.memviewer,this.memvalue);
+  
+
+        });            
+        }
+
+
     }
     showstore16(){
         
