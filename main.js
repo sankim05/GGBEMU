@@ -9,20 +9,24 @@ let clockhz = 4194304;
 let lastTime = 0;
 let accTime  = 0; 
 let accTimer = 0;
-let audiocycle = 0;
+
 let iscolor = false;
 let tcycle = 0;
 let debugging = false;
-
-
+let audioCycleAccumulator = 0.0;
+let samplerate = 44100;
 const msPerTimer = 1000/61;
+let CyclePerSample = clockhz/samplerate;
 
 
 let uploadedfile = null;
 const reader = new FileReader();
   
 
+function CalculateCyclePerSample(){
 
+    CyclePerSample = Math.floor(clockhz / samplerate); 
+}
 
 const originalramshowdiv = document.getElementById("ramcopy");
 for(let i=0;i<15;i++){
@@ -86,11 +90,12 @@ function reset(){
     running = false;
     document.getElementById("pausedtxt").textContent = "현재 정지 중";
     clockhz = 4194304;
+    CalculateCyclePerSample();
     document.getElementById("Speedshow").textContent = "4.19Mhz";
     lastTime = 0;
     accTime  = 0; 
     accTimer = 0;
-    audiocycle = 0;
+    audioCycleAccumulator = 0.0;
     tcycle = 0;
     cpu.reset();
     ppu.reset();
@@ -132,6 +137,7 @@ function runLoop(now) {
 
   if (accTimer >= msPerTimer) {
     ppu.showscreen(); //we will show it like 60hz cuz if we draw it every 4mhz it will LAG
+    apu.updateAudioBuffer();
     if(debugging){
 
         debuggers.showall();
@@ -140,7 +146,7 @@ function runLoop(now) {
         
     }
 
-        //console.log(memory.PPUreadByte(0xFF40).toString(2) + " " + memory.PPUreadByte(0xFF45));
+
  
 
 
@@ -148,7 +154,7 @@ function runLoop(now) {
        
     accTimer = 0;
   }  
-  
+
 
 
 
@@ -167,14 +173,14 @@ function runLoop(now) {
     }
     else if(tcycle%4===0)cpu.cyclerun();
     
-    
-
-    audiocycle+=10;
-    if(audiocycle>=951){
-        audiocycle -=951;
-        apu.updateAudioBuffer();
+    if(tcycle%2===0)apu.APUPeriodCycle();
+    audioCycleAccumulator += 1.0;
+    if(audioCycleAccumulator >= CyclePerSample){
+        audioCycleAccumulator -= CyclePerSample; 
+        if(apu.APUturnedOff === false){
+            apu.fillAudioBuffer();
+        }   
     }
-
     /* 
        if(cpu.PC==0x40&&debugging){
         running = false;
@@ -201,6 +207,8 @@ document.getElementById("EmuRun").addEventListener("click",async function(){
 
     if(apu.audioContext==null){
         apu.audioContext = new AudioContext();
+        samplerate = apu.audioContext.sampleRate;
+        CalculateCyclePerSample();
         await apu.audioContext.audioWorklet.addModule('./audioprocessor.js');
         apu.Nodez = new AudioWorkletNode(apu.audioContext,'Audioprocessorreal', {
 
@@ -250,17 +258,18 @@ document.getElementById("EmuStep").addEventListener("click",function(){
 });
 
 document.getElementById("Speeddown").addEventListener("click",function(){
-    if(clockhz>1)clockhz = clockhz >> 1;
+    if(clockhz>1)clockhz = clockhz >>> 1;
     if(clockhz>=1000000) document.getElementById("Speedshow").textContent = (clockhz/1000000).toFixed(2) + "Mhz";
     else if(clockhz>=1000) document.getElementById("Speedshow").textContent = (clockhz/1000).toFixed(2) + "Khz";
     else document.getElementById("Speedshow").textContent = clockhz + "hz";
+    CalculateCyclePerSample();
 });
 document.getElementById("Speedup").addEventListener("click",function(){
     if(clockhz<32000000)clockhz = clockhz << 1;
     if(clockhz>=1000000) document.getElementById("Speedshow").textContent = (clockhz/1000000).toFixed(2) + "Mhz";
     else if(clockhz>=1000) document.getElementById("Speedshow").textContent = (clockhz/1000).toFixed(2) + "Khz";
     else document.getElementById("Speedshow").textContent = clockhz + "hz";
-
+    CalculateCyclePerSample();
 });
 document.getElementById("DEBUGOPENbtn").addEventListener("click",function(){
     debugging = !debugging;
@@ -288,7 +297,7 @@ document.getElementById("SpeedTextBox").addEventListener("input",function(){
     if(clockhz>=1000000) document.getElementById("Speedshow").textContent = (clockhz/1000000).toFixed(2) + "Mhz";
     else if(clockhz>=1000) document.getElementById("Speedshow").textContent = (clockhz/1000).toFixed(2) + "Khz";
     else document.getElementById("Speedshow").textContent = clockhz + "hz";
-
+    CalculateCyclePerSample();
 });
 
 reset();

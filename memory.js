@@ -15,7 +15,7 @@ mbctable[0x1B] = 5;
 mbctable[0x1C] = 5;
 mbctable[0x1D] = 5;
 mbctable[0x1E] = 5;
-
+let ch3volume = [0.0,1.0,0.5,0.25];
 export class gabememory{
     constructor(){
         this.bootrom = "31 FE FF 21 FF 9F AF 32 CB 7C 20 FA 0E 11 21 26 FF 3E 80 32 E2 0C 3E F3 32 E2 0C 3E 77 32 E2 11 04 01 21 10 80 1A CD B8 00 1A CB 37 CD B8 00 13 7B FE 34 20 F0 11 CC 00 06 08 1A 13 22 23 05 20 F9 21 04 99 01 0C 01 CD B1 00 3E 19 77 21 24 99 0E 0C CD B1 00 3E 91 E0 40 06 10 11 D4 00 78 E0 43 05 7B FE D8 28 04 1A E0 47 13 0E 1C CD A7 00 AF 90 E0 43 05 0E 1C CD A7 00 AF B0 20 E0 E0 43 3E 83 CD 9F 00 0E 27 CD A7 00 3E C1 CD 9F 00 11 8A 01 F0 44 FE 90 20 FA 1B 7A B3 20 F5 18 49 0E 13 E2 0C 3E 87 E2 C9 F0 44 FE 90 20 FA 0D 20 F7 C9 78 22 04 0D 20 FA C9 47 0E 04 AF C5 CB 10 17 C1 CB 10 17 0D 20 F5 22 23 22 23 C9 3C 42 B9 A5 B9 A5 42 3C 00 54 A8 FC 42 4F 4F 54 49 58 2E 44 4D 47 20 76 31 2E 32 00 3E FF C6 01 0B 1E D8 21 4D 01 00 00 00 00 00 00 00 00 00 00 3E 01 E0 50".replace(/\s/g, '');
@@ -680,8 +680,9 @@ return this.bigmemory[address&0xFFFF];
                     case 0xFF12:
                         this.bigmemory[address] = value;
 
-                        if((value >> 3) ===0){
+                        if((value >>> 3) ===0){
                             this.apuinfo.ChannelDAC[0] = 0;
+                            this.apuinfo.ChannelOn[0] = 0;
                         }else{
                             this.apuinfo.ChannelDAC[0] = 1;
                         }
@@ -690,16 +691,25 @@ return this.bigmemory[address&0xFFFF];
                         this.vramchecker = false;
 
                     break;
+                    case 0xFF13:
+                        this.bigmemory[address] = value;
+                        this.apuinfo.setFrequency(1);
+                        this.vramchecker = false;
+                    break;
                     case 0xFF14:
-                        if((value&64)&&(!(this.bigmemory[address]&64)))this.apuinfo.updateAPUFromMemoryWrite(0)
+                        if((value&64)&&(!(this.bigmemory[address]&64)))this.apuinfo.updateAPUFromMemoryWrite(0);
                         this.bigmemory[address] = value;
                         if(value&128){
                             if(this.apuinfo.ChannelDAC[0]){
                                 this.apuinfo.ChannelOn[0] = 1;
-                                this.apuinfo.updateChannelLengthFromMemoryWrite(0,this.bigmemory[0xFF11]);
+                                this.apuinfo.ChannelVolume[0] = ((this.bigmemory[0xFF12]&0xF0)>>>4);
+                            
+                                this.apuinfo.ChannelEnvelopeTick[0] = this.bigmemory[0xFF12] & 0x07;
+                                this.apuinfo.updateAPUFromMemoryWrite(0);
                                 this.apuinfo.C1ShadowReg = ((this.bigmemory[0xFF14]&0x07) << 8) | this.bigmemory[0xFF13];
                             }
                         }
+                        this.apuinfo.setFrequency(1);
                         this.vramchecker = false;
                     break;        
                     case 0xFF16:
@@ -707,21 +717,79 @@ return this.bigmemory[address&0xFFFF];
                         this.apuinfo.updateChannelLengthFromMemoryWrite(1,value);
                         this.vramchecker = false;
                     break;
-                    case 0xFF19:
-                        if((value&64)&&(!(this.bigmemory[address]&64)))this.apuinfo.updateAPUFromMemoryWrite(1)
+                    case 0xFF17:
                         this.bigmemory[address] = value;
-                        
+
+                        if((value >>> 3) ===0){
+                            this.apuinfo.ChannelDAC[1] = 0;
+                            this.apuinfo.ChannelOn[1] = 0;
+                        }else{
+                            this.apuinfo.ChannelDAC[1] = 1;
+                        }
+
+
                         this.vramchecker = false;
-                    break;  
+
+                    break;    
+                    case 0xFF18:
+                        this.bigmemory[address] = value;
+                        this.apuinfo.setFrequency(2);
+                        this.vramchecker = false;
+                    break;                                    
+                    case 0xFF19:
+                        if((value&64)&&(!(this.bigmemory[address]&64)))this.apuinfo.updateAPUFromMemoryWrite(1);
+                        this.bigmemory[address] = value;
+                        if(value&128){
+                            if(this.apuinfo.ChannelDAC[1]){
+                                this.apuinfo.ChannelOn[1] = 1;
+                                this.apuinfo.ChannelVolume[1] = ((this.bigmemory[0xFF17]&0xF0)>>>4);
+                                this.apuinfo.ChannelEnvelopeTick[1] = this.bigmemory[0xFF17] & 0x07;
+                                this.apuinfo.updateAPUFromMemoryWrite(1);
+                                
+                            }
+                        }
+                        this.apuinfo.setFrequency(2);                        
+                        this.vramchecker = false;
+                    break;
+                    case 0xFF1A:
+                        this.bigmemory[address] = value;
+                        if(value&128){
+                            this.apuinfo.ChannelDAC[2] = 1;
+                        }else{
+                            this.apuinfo.ChannelDAC[2] = 0;
+                            this.apuinfo.ChannelOn[2] = 0;
+                        }
+                        this.vramchecker = false;
+                    break;                    
                     case 0xFF1B:
                         this.bigmemory[address] = value;
                         this.apuinfo.updateChannelLengthFromMemoryWrite(2,value);
                         this.vramchecker = false;
                     break;
-                    case 0xFF1E:
-                        if((value&64)&&(!(this.bigmemory[address]&64)))this.apuinfo.updateAPUFromMemoryWrite(2)
+                    case 0xFF1C:
                         this.bigmemory[address] = value;
+                        this.apuinfo.ch3vol = ch3volume[(value&0x60)>>5];
+                        this.vramchecker = false;
+                    break;
+                    case 0xFF1D:
+                        this.bigmemory[address] = value;
+                        this.apuinfo.setFrequency(3);
+                        this.vramchecker = false;
+                    break;                                        
+                    case 0xFF1E:
+                        if((value&64)&&(!(this.bigmemory[address]&64)))this.apuinfo.updateAPUFromMemoryWrite(2);
+                        this.bigmemory[address] = value;
+                        if(value&128){
+                            if(this.apuinfo.ChannelDAC[2]){
+                                this.apuinfo.ChannelOn[2] = 1;
+                                this.apuinfo.C3Index = 1;
+                                this.apuinfo.ch3vol = ch3volume[(this.bigmemory[0xFF1C]&0x60)>>5];
+                                this.apuinfo.updateAPUFromMemoryWrite(2);
+                                
+                            }
+                        }    
                         
+                        this.apuinfo.setFrequency(3);                        
                         this.vramchecker = false;
                     break;
                     case 0xFF20:
@@ -729,10 +797,39 @@ return this.bigmemory[address&0xFFFF];
                         this.apuinfo.updateChannelLengthFromMemoryWrite(3,value);
                         this.vramchecker = false;
                     break;
-                    case 0xFF23:
-                        if((value&64)&&(!(this.bigmemory[address]&64)))this.apuinfo.updateAPUFromMemoryWrite(3)
+                    case 0xFF21:
                         this.bigmemory[address] = value;
-                        
+
+                        if((value >>> 3) ===0){
+                            this.apuinfo.ChannelDAC[3] = 0;
+                            this.apuinfo.ChannelOn[3] = 0;
+                        }else{
+                            this.apuinfo.ChannelDAC[3] = 1;
+                        }
+
+
+                        this.vramchecker = false;
+
+                    break;   
+                    case 0xFF22:
+                        this.bigmemory[address] = value;
+                        this.apuinfo.setFrequency(4);
+                        this.vramchecker = false;
+                    break;                
+                    case 0xFF23:
+                        if((value&64)&&(!(this.bigmemory[address]&64)))this.apuinfo.updateAPUFromMemoryWrite(3);
+                        this.bigmemory[address] = value;
+                        if(value&128){
+                            if(this.apuinfo.ChannelDAC[3]){
+                                this.apuinfo.ChannelOn[3] = 1;
+                                this.apuinfo.ChannelVolume[3] = ((this.bigmemory[0xFF21]&0xF0)>>>4);
+                                this.apuinfo._LFSR = 0;
+                                this.apuinfo.ChannelEnvelopeTick[3] = this.bigmemory[0xFF21] & 0x07;
+                                this.apuinfo.updateAPUFromMemoryWrite(3);
+                                this.apuinfo.setFrequency(4);
+                                
+                            }
+                        }                                           
                         this.vramchecker = false;
                     break;                                                                                                              
                     case 0xFF26:
@@ -744,7 +841,7 @@ return this.bigmemory[address&0xFFFF];
                         this.vramchecker = false;
                     break;
                     case 0xFF44:
-                       
+    
                        this.vramchecker = false;
                     break;
                     case 0xFF46:

@@ -134,7 +134,7 @@ export class GABEPPU{
        // console.log(lcdc.toString(2));
         for(let i=0;i<1024;i++){
             const tilex = i%32;
-            const tiley = i>>5;
+            const tiley = i>>>5;
             let tileid = 0x9800+i;
             if(lcdc&8) tileid+= 0x400;
             tileid = this.memory.PPUreadByte(tileid);
@@ -150,11 +150,11 @@ export class GABEPPU{
                 const absdat = this.memory.PPUreadByte(tileaddress+j*2);
                 const absdat2 = this.memory.PPUreadByte(tileaddress+1+j*2);
                 for(let k=0;k<8;k++){
-                    const abspix = (absdat >> (7-k))&1;
-                    const abspix2 = (absdat2 >> (7-k))&1;
+                    const abspix = (absdat >>> (7-k))&1;
+                    const abspix2 = (absdat2 >>> (7-k))&1;
                     const datdat = abspix | (abspix2<<1);
                     
-                    const superfixges = (this.memory.PPUreadByte(0xFF47) & (3 << datdat*2 )) >> (datdat*2);
+                    const superfixges = (this.memory.PPUreadByte(0xFF47) & (3 << datdat*2 )) >>> (datdat*2);
                     
                     switch(superfixges){
                     case 0:
@@ -181,7 +181,7 @@ export class GABEPPU{
         }
         for(let i=0;i<1024;i++){
             const tilex = i%32;
-            const tiley = i>>5;
+            const tiley = i>>>5;
             let tileid = 0x9800+i;
             if(lcdc&64) tileid+= 0x400;
             tileid = this.memory.PPUreadByte(tileid);
@@ -197,11 +197,11 @@ export class GABEPPU{
                 const absdat = this.memory.PPUreadByte(tileaddress+j*2);
                 const absdat2 = this.memory.PPUreadByte(tileaddress+1+j*2);
                 for(let k=0;k<8;k++){
-                    const abspix = (absdat >> (7-k))&1;
-                    const abspix2 = (absdat2 >> (7-k))&1;
+                    const abspix = (absdat >>> (7-k))&1;
+                    const abspix2 = (absdat2 >>> (7-k))&1;
                     const datdat = abspix | (abspix2<<1);
                     
-                    const superfixges = (this.memory.PPUreadByte(0xFF47) & (3 << datdat*2 )) >> (datdat*2);
+                    const superfixges = (this.memory.PPUreadByte(0xFF47) & (3 << datdat*2 )) >>> (datdat*2);
                     
                     switch(superfixges){
                     case 0:
@@ -307,8 +307,8 @@ export class GABEPPU{
                                 }
                             }
                             this.oamarray.sort((a,b) => {
-                                const ax = (a&0x00FF0000) >> 16;
-                                const bx = (b&0x00FF0000) >> 16;
+                                const ax = (a&0x00FF0000) >>> 16;
+                                const bx = (b&0x00FF0000) >>> 16;
                             return ax - bx;
 
 
@@ -361,18 +361,18 @@ export class GABEPPU{
                                     case 2:
 
                                     if(this.windowing){
-                                        const wix = (this.wcurx>>3)&0x1F;
+                                        const wix = (this.wcurx>>>3)&0x1F;
                                         
-                                        if(LCDC&64) this.temptileid = this.memory.PPUreadByte(0x9C00+((this.wiy>>3)<<5)+wix); 
-                                        else this.temptileid = this.memory.PPUreadByte(0x9800+((this.wiy>>3)<<5)+wix);  
+                                        if(LCDC&64) this.temptileid = this.memory.PPUreadByte(0x9C00+((this.wiy>>>3)<<5)+wix); 
+                                        else this.temptileid = this.memory.PPUreadByte(0x9800+((this.wiy>>>3)<<5)+wix);  
                                     }else{
                                         const aby = (this.getly() + this.memory.PPUreadByte(0xFF42))&0xFF;
                                         
                                         const abx = (this.petx + this.memory.PPUreadByte(0xFF43))&0xFF;
                                         
                                         
-                                        if(LCDC&8) this.temptileid = this.memory.PPUreadByte(0x9C00+((aby>>3)<<5)+(abx>>3)); 
-                                        else this.temptileid = this.memory.PPUreadByte(0x9800+((aby>>3)<<5)+(abx>>3)); 
+                                        if(LCDC&8) this.temptileid = this.memory.PPUreadByte(0x9C00+((aby>>>3)<<5)+(abx>>>3)); 
+                                        else this.temptileid = this.memory.PPUreadByte(0x9800+((aby>>>3)<<5)+(abx>>>3)); 
                                         
                                         
                                         
@@ -395,7 +395,7 @@ export class GABEPPU{
                                         const tmptmpdata = this.memory.PPUreadByte(realaddress);
                                         
                                         for(let i=0;i<8;i++){
-                                            this.size8arrayfor1line8dots[i] = (tmptmpdata >> (7-i))&1;
+                                            this.size8arrayfor1line8dots[i] = (tmptmpdata >>> (7-i))&1;
                                         }
                                         this.tmpaddress = realaddress+1;
                                         
@@ -405,7 +405,7 @@ export class GABEPPU{
                                         const tmptmpdata2 = this.memory.PPUreadByte(this.tmpaddress);
                                         
                                         for(let i=0;i<8;i++){
-                                            this.size8arrayfor1line8dots[i] = this.size8arrayfor1line8dots[i] | (((tmptmpdata2 >> (7-i))&1)<<1);
+                                            this.size8arrayfor1line8dots[i] = this.size8arrayfor1line8dots[i] | (((tmptmpdata2 >>> (7-i))&1)<<1);
                                         }
                                     break;
                                         //case 8 sleep 
@@ -444,7 +444,7 @@ export class GABEPPU{
                                 if(LCDC&1){ // if show bg
                                     
                                     //if(rawpix)console.log(rawpix);
-                                    finpix = (this.memory.PPUreadByte(0xFF47)&(3<<(rawpix*2)))>>(rawpix*2);
+                                    finpix = (this.memory.PPUreadByte(0xFF47)&(3<<(rawpix*2)))>>>(rawpix*2);
                                     
                                 }
                                 let output = false;
@@ -464,8 +464,8 @@ export class GABEPPU{
                                         let objpix = this.objectbuffer.dataz[this.objectbuffer.head];
                                       
                                         if(objpix&3){  
-                                            let cpal = this.memory.PPUreadByte(0xFF48+((objpix&16)>>4)); // Not swearing!
-                                            let truepix = (cpal & (3 << ((objpix&3)*2))) >> ((objpix&3)*2);
+                                            let cpal = this.memory.PPUreadByte(0xFF48+((objpix&16)>>>4)); // Not swearing!
+                                            let truepix = (cpal & (3 << ((objpix&3)*2))) >>> ((objpix&3)*2);
                                          
                                             if((rawpix==0) || ((objpix&128)==0)) finpix = truepix;
                                             
@@ -503,8 +503,8 @@ export class GABEPPU{
                             
                             let objecty = this.getly() - ((objectsprite >>> 24) - 16);
                             let penaltyz = 6;
-                            let temptileoams = ((this.curx + this.memory.PPUreadByte(0xFF43)))>>3;
-                            if(this.windowing) temptileoams = this.wcurx>>3;
+                            let temptileoams = ((this.curx + this.memory.PPUreadByte(0xFF43)))>>>3;
+                            if(this.windowing) temptileoams = this.wcurx>>>3;
                             if(this.lasttileforoam!= temptileoams){
                                 penaltyz += 7 - this.SCXWP;
                                 if(7-this.SCXWP<0) penaltyz = 6;
@@ -534,13 +534,13 @@ export class GABEPPU{
                                 for(let i=0;i<8;i++){
                                     res1 = res1 << 1;
                                     res1 = res1 | (bytez1&1);
-                                    bytez1 = bytez1 >> 1;
+                                    bytez1 = bytez1 >>> 1;
                                     
                                 }
                                 for(let i=0;i<8;i++){
                                     res2 = res2 << 1;
                                     res2 = res2 | (bytez2&1);
-                                    bytez2 = bytez2 >> 1;
+                                    bytez2 = bytez2 >>> 1;
                                     
                                 }
                                 bytez1 = res1;
@@ -549,8 +549,8 @@ export class GABEPPU{
                             
                             for(let i=0;i<8;i++){
                                 let saveint = 0;
-                                saveint = (bytez1 >> (7-i))&1;
-                                saveint = saveint | (((bytez2 >> (7-i))&1) <<1);
+                                saveint = (bytez1 >>> (7-i))&1;
+                                saveint = saveint | (((bytez2 >>> (7-i))&1) <<1);
                                 saveint = saveint | (objectflag&0xF0);//priority bit 7 and palette bit 4
                                 if(objectx+i>=this.curx){
                                     let pospos = (this.objectbuffer.head + i)&0xF; // div 16
